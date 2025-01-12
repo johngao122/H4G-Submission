@@ -2,7 +2,11 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { DollarSign } from "lucide-react";
 
-const VoucherBalance = (balance: number) => {
+interface VoucherBalanceProps {
+    balance: number;
+}
+
+const VoucherBalance: React.FC<VoucherBalanceProps> = ({ balance }) => {
     const balanceDisplay = "$" + balance.toFixed(2);
     return (
         <Card className="bg-white">
