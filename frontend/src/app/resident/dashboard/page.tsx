@@ -7,6 +7,7 @@ import TopBar from "@/components/topbar";
 import { ShoppingBag, ClipboardList, History, CheckSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { useRoleCheck } from "@/hooks/useRoleCheck";
 
 const SAMPLE_TRANSACTIONS = [
@@ -44,6 +45,7 @@ const SAMPLE_TRANSACTIONS = [
 ];
 
 export default function ResidentDashboard() {
+    const router = useRouter();
     const { isSignedIn, user, isLoaded } = useUser();
 
     if (!isLoaded) {
@@ -83,7 +85,7 @@ export default function ResidentDashboard() {
                         <QuickAction
                             icon={ShoppingBag}
                             title="Shop"
-                            onClick={() => console.log("Shop clicked")}
+                            onClick={() => router.push("/resident/shop")}
                         />
                         <QuickAction
                             icon={ClipboardList}
