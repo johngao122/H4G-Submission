@@ -13,7 +13,8 @@ const TopBar = () => {
     const navigationItems = [
         { name: "Shop", href: "/resident/shop" },
         { name: "Tasks", href: "/resident/tasks" },
-        { name: "Transaction History", href: "resident/history" },
+        { name: "Transaction History", href: "/resident/history" },
+        { name: "Request Items", href: "/resident/request" },
     ];
 
     return (
