@@ -4,6 +4,7 @@ interface ShopItemProps {
     description: string;
     price: number;
     imageUrl: string;
+    quantity: number;
     onAddToCart: (id: string, quantity: number) => void;
 }
 
@@ -13,6 +14,7 @@ interface Product {
     description: string;
     price: number;
     imageUrl: string;
+    quantity: number;
 }
 interface CartItem extends Product {
     quantity: number;

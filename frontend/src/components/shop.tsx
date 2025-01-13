@@ -17,6 +17,7 @@ const SAMPLE_PRODUCTS: Product[] = [
         description: "Description of Product 1",
         price: 19.99,
         imageUrl: "/api/placeholder/300/200",
+        quantity: 200,
     },
     {
         id: "2",
@@ -24,6 +25,7 @@ const SAMPLE_PRODUCTS: Product[] = [
         description: "Description of Product 2",
         price: 29.99,
         imageUrl: "/api/placeholder/300/200",
+        quantity: 100,
     },
     {
         id: "3",
@@ -31,6 +33,7 @@ const SAMPLE_PRODUCTS: Product[] = [
         description: "Description of Product 3",
         price: 39.99,
         imageUrl: "/api/placeholder/300/200",
+        quantity: 0,
     },
 ];
 
@@ -76,7 +79,16 @@ const Shop: React.FC = () => {
 
     const handleAddToCart = (productId: string, quantity: number) => {
         const productToAdd = SAMPLE_PRODUCTS.find((p) => p.id === productId);
-        if (!productToAdd) return;
+        if (!productToAdd || productToAdd.quantity === 0) return;
+
+        const currentCartItem = cartItems.find((item) => item.id === productId);
+        const currentCartQuantity = currentCartItem?.quantity || 0;
+        const totalRequestedQuantity = currentCartQuantity + quantity;
+
+        if (totalRequestedQuantity > productToAdd.quantity) {
+            alert("Not enough stock available!");
+            return;
+        }
 
         setCartItems((prevItems) => {
             const existingItemIndex = prevItems.findIndex(
@@ -86,13 +98,18 @@ const Shop: React.FC = () => {
             if (existingItemIndex >= 0) {
                 const updatedItems = [...prevItems];
                 updatedItems[existingItemIndex] = {
-                    ...updatedItems[existingItemIndex],
-                    quantity:
-                        updatedItems[existingItemIndex].quantity + quantity,
+                    ...productToAdd,
+                    quantity: totalRequestedQuantity,
                 };
                 return updatedItems;
             } else {
-                return [...prevItems, { ...productToAdd, quantity }];
+                return [
+                    ...prevItems,
+                    {
+                        ...productToAdd,
+                        quantity: quantity,
+                    },
+                ];
             }
         });
     };

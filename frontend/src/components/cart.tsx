@@ -28,7 +28,24 @@ const Cart = () => {
     useEffect(() => {
         const saved = localStorage.getItem("cart");
         if (saved) {
-            setCartItems(JSON.parse(saved));
+            try {
+                const parsedCart = JSON.parse(saved);
+                const validCart = parsedCart.every(
+                    (item: any) =>
+                        item.id &&
+                        typeof item.price === "number" &&
+                        typeof item.quantity === "number"
+                );
+                if (validCart) {
+                    setCartItems(parsedCart);
+                } else {
+                    console.error("Invalid cart data detected");
+                    localStorage.removeItem("cart");
+                }
+            } catch (error) {
+                console.error("Error parsing cart data:", error);
+                localStorage.removeItem("cart");
+            }
         }
     }, []);
 
@@ -36,6 +53,7 @@ const Cart = () => {
         setCartItems(updatedCart);
         localStorage.setItem("cart", JSON.stringify(updatedCart));
     };
+
     const removeFromCart = (productId: string) => {
         const updatedCart = cartItems.filter((item) => item.id !== productId);
         updateCart(updatedCart);
@@ -115,7 +133,6 @@ const Cart = () => {
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     {[
-                                                        //Change Accordingly
                                                         1, 2, 3, 4, 5, 6, 7, 8,
                                                         9, 10,
                                                     ].map((num) => (
@@ -145,7 +162,8 @@ const Cart = () => {
                                         <p className="font-medium ml-auto">
                                             $
                                             {(
-                                                item.price * item.quantity
+                                                (item.price || 0) *
+                                                item.quantity
                                             ).toFixed(2)}
                                         </p>
                                     </div>
