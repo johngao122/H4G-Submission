@@ -202,7 +202,15 @@ const TransactionHistoryTable: React.FC<TransactionHistoryProps> = ({
                                             colSpan={columns.length}
                                             className="h-24 text-center"
                                         >
-                                            No results.
+                                            <div className="flex flex-col items-center justify-center text-gray-500">
+                                                <p className="text-lg font-medium">
+                                                    No Transactions Found
+                                                </p>
+                                                <p className="text-sm">
+                                                    There are no transactions in
+                                                    your record yet.
+                                                </p>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 )}
