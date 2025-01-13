@@ -19,6 +19,7 @@ public class Contributor {
         this.taskId = taskId;
         this.userId = userId;
         this.datetime = LocalDateTime.now();
+        this.status = ContributorStatus.PENDING;
     }
 
     @Override

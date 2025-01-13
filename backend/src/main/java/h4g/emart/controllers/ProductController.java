@@ -23,10 +23,11 @@ public class ProductController {
      * @return A ResponseEntity containing the created product and HTTP status 201 (Created).
      */
     @PostMapping
-    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-        Product createdProduct = productService.createProduct(product);
+    public ResponseEntity<Product> createProduct(@RequestBody Product product, @RequestHeader("userId") String userId) {
+        Product createdProduct = productService.createProduct(product, userId);
         return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
     }
+
 
     // 2. Get a Product by ID (Read)
     /**
@@ -65,8 +66,8 @@ public class ProductController {
      *         or HTTP status 404 (Not Found) if the product does not exist.
      */
     @PutMapping("/{productId}")
-    public ResponseEntity<Product> updateProduct(@PathVariable String productId, @RequestBody Product updatedProduct) {
-        Product product = productService.updateProduct(productId, updatedProduct);
+    public ResponseEntity<Product> updateProduct(@PathVariable String productId, @RequestBody Product updatedProduct, @RequestHeader String userId) {
+        Product product = productService.updateProduct(productId, updatedProduct, userId);
         if (product != null) {
             return new ResponseEntity<>(product, HttpStatus.OK);
         } else {
@@ -82,8 +83,8 @@ public class ProductController {
      *         or HTTP status 404 (Not Found) if the product does not exist.
      */
     @DeleteMapping("/{productId}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable String productId) {
-        boolean deleted = productService.deleteProduct(productId);
+    public ResponseEntity<Void> deleteProduct(@PathVariable String productId, @RequestHeader String userId) {
+        boolean deleted = productService.deleteProduct(productId, userId);
         if (deleted) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
@@ -100,8 +101,8 @@ public class ProductController {
      *         or HTTP status 404 (Not Found) if the product does not exist.
      */
     @PatchMapping("/{productId}/quantity")
-    public ResponseEntity<Product> updateProductQuantity(@PathVariable String productId, @RequestParam int quantity) {
-        Product product = productService.updateProductQuantity(productId, quantity);
+    public ResponseEntity<Product> updateProductQuantity(@PathVariable String productId, @RequestParam int quantity, @RequestHeader String userId) {
+        Product product = productService.updateProductQuantity(productId, quantity, userId);
         if (product != null) {
             return new ResponseEntity<>(product, HttpStatus.OK);
         } else {
@@ -109,24 +110,7 @@ public class ProductController {
         }
     }
 
-    // 7. Upload Product Photo
-    /**
-     * Uploads a photo for a product.
-     * @param productId The ID of the product for which the photo is being uploaded.
-     * @param productPhoto The photo file for the product.
-     * @return A ResponseEntity containing the updated product and HTTP status 200 (OK),
-     *         or HTTP status 404 (Not Found) if the product does not exist.
-     */
-    @PostMapping("/{productId}/photo")
-    public ResponseEntity<Product> uploadProductPhoto(@PathVariable String productId, @RequestParam byte[] productPhoto) {
-        Product product = productService.uploadProductPhoto(productId, productPhoto);
-        if (product != null) {
-            return new ResponseEntity<>(product, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
+    // 7. Get Products by Category
     /**
      * Endpoint to get Products by category
      * 

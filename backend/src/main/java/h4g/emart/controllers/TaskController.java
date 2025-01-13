@@ -110,33 +110,19 @@ public class TaskController {
         }
     }
 
-    // 7. Remove a Contributor from a Task
-    /**
-     * Removes a contributor from a task.
-     * @param taskId The ID of the task from which the contributor will be removed.
-     * @param contributorId The ID of the contributor to be removed.
-     * @return A ResponseEntity containing the updated task and HTTP status 200 (OK),
-     *         or HTTP status 404 (Not Found) if the task or contributor does not exist.
-     */
-    @DeleteMapping("/{taskId}/contributors/{contributorId}")
-    public ResponseEntity<Task> removeContributor(@PathVariable String taskId, @PathVariable String contributorId) {
-        Task task = taskService.removeContributor(taskId, contributorId);
-        if (task != null) {
-            return new ResponseEntity<>(task, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
-    // 8. Get Tasks by Status
+    // 7. Get Tasks by Status
     /**
      * Retrieves tasks filtered by their status.
      * @param status The status to filter tasks by.
      * @return A ResponseEntity containing a list of tasks with the specified status and HTTP status 200 (OK).
      */
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Task>> getTasksByStatus(@PathVariable TaskStatus status) {
-        List<Task> tasks = taskService.getTasksByStatus(status);
-        return new ResponseEntity<>(tasks, HttpStatus.OK);
+    public ResponseEntity<List<Task>> getTasksByStatus(@PathVariable String status) {
+        try {
+            List<Task> tasks = taskService.getTasksByStatus(status);
+            return new ResponseEntity<>(tasks, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 }

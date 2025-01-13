@@ -6,6 +6,8 @@ import h4g.emart.repositories.PreorderRepository;
 import h4g.emart.services.SequenceGeneratorService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -88,24 +90,18 @@ public class PreorderService {
      * 
      * @param preorderId The ID of the preorder to update.
      * @param status The new status to set.
-     * @return The updated preorder.
+     * @return A ResponseEntity with the updated preorder or an error message.
      */
     public Preorder updatePreorderStatus(String preorderId, String status) {
-        PreorderStatus preorderStatus;
-
-        try {
-            preorderStatus = PreorderStatus.valueOf(status.toUpperCase()); // Convert string to enum
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // Return 400 if status is invalid
-        }
-        
+        PreorderStatus preorderStatus = PreorderStatus.valueOf(status.toUpperCase());
         Optional<Preorder> preorder = preorderRepository.findById(preorderId);
         if (preorder.isPresent()) {
             Preorder p = preorder.get();
             p.setStatus(preorderStatus);
             return preorderRepository.save(p);
+        } else {
+            return null;
         }
-        return null;
     }
 
     /**
@@ -143,15 +139,10 @@ public class PreorderService {
      * Retrieves all preorders by status.
      * 
      * @param status The status to filter preorders by.
-     * @return A list of preorders for the specified user.
+     * @return A list of preorders for the specified status.
      */
     public List<Preorder> getPreordersByStatus(String status) {
-        PreorderStatus preorderStatus;
-        try {
-            preorderStatus = PreorderStatus.valueOf(status.toUpperCase()); // Convert string to enum
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // Return 400 if status is invalid
-        }
+        PreorderStatus preorderStatus = PreorderStatus.valueOf(status.toUpperCase());
         return preorderRepository.findByStatus(preorderStatus);
     }
 }

@@ -12,7 +12,7 @@ import lombok.Setter;
 @Document(collection = "Task")
 
 public class Task {
-    private @Getter String taskId;
+    private @Getter @Setter String taskId;
     private @Getter @Setter String taskName;
     private @Getter @Setter String taskDesc;
     private @Getter @Setter long taskReward;
@@ -27,6 +27,16 @@ public class Task {
         this.taskReward = taskReward;
         this.createdOn = LocalDateTime.now();
         this.status = status;
+    }
+
+    public Task(String taskName, String taskDesc, long taskReward, LocalDateTime createdOn, TaskStatus status,
+            ArrayList<Contributor> contributors) {
+        this.taskName = taskName;
+        this.taskDesc = taskDesc;
+        this.taskReward = taskReward;
+        this.createdOn = createdOn;
+        this.status = status;
+        this.contributors = contributors;
     }
 
     public void addContributor(Contributor contributor) {

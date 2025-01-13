@@ -69,11 +69,16 @@ public class PreorderController {
     @PatchMapping("/{preorderId}/status")
     public ResponseEntity<Preorder> updatePreorderStatus(@PathVariable String preorderId, @RequestParam("status") String status) {
         Preorder preorder = preorderService.updatePreorderStatus(preorderId, status);
-        if (preorder != null) {
-            return new ResponseEntity<>(preorder, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        try {
+            if (preorder != null) {
+                return new ResponseEntity<>(preorder, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+        
     }
 
     // 7. Get Preorders by Product ID
@@ -138,7 +143,7 @@ public class PreorderController {
      * @return A ResponseEntity containing a list of preorders and HTTP status 200 (OK),
      *         or HTTP status 404 (Not Found) if no preorders are found for the user.
      */
-    @GetMapping("status/${status}")
+    @GetMapping("status/{status}")
     public ResponseEntity<List<Preorder>> getPreordersByStatus(@PathVariable String status) {
         List<Preorder> preorders = preorderService.getPreordersByStatus(status);
         if (preorders.isEmpty()) {

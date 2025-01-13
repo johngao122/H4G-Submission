@@ -14,11 +14,11 @@ public class Product {
     private @Getter @Setter String name;
     private @Getter @Setter String category;
     private @Getter @Setter String desc;
-    private @Getter @Setter long price;
-    private @Getter @Setter int quantity;
+    private @Getter @Setter double price;
+    private @Getter @Setter long quantity;
     private @Getter @Setter byte[] productPhoto;
 
-    public Product(String productId, String name, String category, String desc, long price, int quantity,
+    public Product(String productId, String name, String category, String desc, double price, long quantity,
             byte[] productPhoto) {
         this.productId = productId;
         this.name = name;
@@ -30,13 +30,17 @@ public class Product {
     }
 
     // Placeholder Product request
-    public Product(String name, String category, String desc, long price, int quantity, byte[] productPhoto) {
+    public Product(String name, String category, String desc, double price, long quantity, byte[] productPhoto) {
         this.name = name;
         this.category = category;
         this.desc = desc;
         this.price = price;
         this.quantity = quantity;
         this.productPhoto = productPhoto;
+    }
+
+    public void bought(long amt) {
+        this.quantity -= amt;
     }
 
     @Override
