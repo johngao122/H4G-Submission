@@ -4,6 +4,10 @@ interface TransactionItem {
     pricePerUnit: number;
 }
 
+interface TransactionItemInTable extends TransactionItem {
+    productName: string;
+}
+
 interface Transaction {
     transactionId: string;
     userId: string;
@@ -25,9 +29,23 @@ interface TransactionRequest {
     datetime: string;
 }
 
+interface TransactionDisplay {
+    transactionId: string;
+    userId: string;
+    items: TransactionItemInTable[];
+    totalPrice: number;
+    datetime: string;
+}
+
+interface TransactionHistoryProps {
+    transactions: TransactionDisplay[];
+}
+
 export type {
     Transaction,
     TransactionItem,
     TransactionResponse,
     TransactionRequest,
+    TransactionDisplay,
+    TransactionHistoryProps,
 };

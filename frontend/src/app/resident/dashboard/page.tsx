@@ -90,17 +90,17 @@ export default function ResidentDashboard() {
                         <QuickAction
                             icon={ClipboardList}
                             title="Request Items"
-                            onClick={() => console.log("Request clicked")}
+                            onClick={() => router.push("/resident/request")}
                         />
                         <QuickAction
                             icon={History}
                             title="Transaction History"
-                            onClick={() => console.log("History clicked")}
+                            onClick={() => router.push("/resident/history")}
                         />
                         <QuickAction
                             icon={CheckSquare}
                             title="Tasks"
-                            onClick={() => console.log("Tasks clicked")}
+                            onClick={() => router.push("/resident/tasks")}
                         />
                     </div>
                 </div>
