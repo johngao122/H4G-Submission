@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Getter;
 
-@Document(collection = "ProductLogs")
+@Document(collection = "ProductLog")
 
 public class ProductLog {
     private @Getter String logId;

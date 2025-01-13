@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.Getter;
 import lombok.Setter;
 
-@Document(collection = "Tasks")
+@Document(collection = "Task")
 
 public class Task {
     private @Getter String taskId;
