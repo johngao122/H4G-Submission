@@ -7,10 +7,11 @@ import { ShoppingCart, Search } from "lucide-react";
 import ShopItem from "./shopItem";
 import { useRouter } from "next/navigation";
 import { Product } from "@/app/types/shop";
-import { useAuth } from "@clerk/nextjs";
+import { useCart } from "@/context/cartContext";
+import { useToast } from "@/hooks/use-toast";
 
 const SAMPLE_PRODUCTS: Product[] = [
-    //replace with API
+    //remove when API is out
     {
         id: "1",
         name: "Product 1",
@@ -39,30 +40,11 @@ const SAMPLE_PRODUCTS: Product[] = [
 
 const Shop: React.FC = () => {
     const router = useRouter();
-    const { userId } = useAuth();
+    const { toast } = useToast();
     const [searchQuery, setSearchQuery] = useState("");
     const [filteredProducts, setFilteredProducts] =
         useState<Product[]>(SAMPLE_PRODUCTS);
-    const [cartItems, setCartItems] = useState<
-        { id: string; quantity: number }[]
-    >(() => {
-        if (typeof window !== "undefined") {
-            const saved = localStorage.getItem("cart");
-            return saved ? JSON.parse(saved) : [];
-        }
-        return [];
-    });
-
-    useEffect(() => {
-        localStorage.setItem("cart", JSON.stringify(cartItems));
-    }, [cartItems]);
-
-    useEffect(() => {
-        if (!userId) {
-            localStorage.removeItem("cart");
-            setCartItems([]);
-        }
-    }, [userId]);
+    const { totalItems, addToCart } = useCart();
 
     useEffect(() => {
         const filtered = SAMPLE_PRODUCTS.filter(
@@ -79,45 +61,30 @@ const Shop: React.FC = () => {
 
     const handleAddToCart = (productId: string, quantity: number) => {
         const productToAdd = SAMPLE_PRODUCTS.find((p) => p.id === productId);
-        if (!productToAdd || productToAdd.quantity === 0) return;
-
-        const currentCartItem = cartItems.find((item) => item.id === productId);
-        const currentCartQuantity = currentCartItem?.quantity || 0;
-        const totalRequestedQuantity = currentCartQuantity + quantity;
-
-        if (totalRequestedQuantity > productToAdd.quantity) {
-            alert("Not enough stock available!");
+        if (!productToAdd || productToAdd.quantity === 0) {
+            toast({
+                title: "Error",
+                description: "Product is out of stock",
+                variant: "destructive",
+            });
             return;
         }
 
-        setCartItems((prevItems) => {
-            const existingItemIndex = prevItems.findIndex(
-                (item) => item.id === productId
-            );
+        if (quantity > productToAdd.quantity) {
+            toast({
+                title: "Error",
+                description: "Not enough stock available",
+                variant: "destructive",
+            });
+            return;
+        }
 
-            if (existingItemIndex >= 0) {
-                const updatedItems = [...prevItems];
-                updatedItems[existingItemIndex] = {
-                    ...productToAdd,
-                    quantity: totalRequestedQuantity,
-                };
-                return updatedItems;
-            } else {
-                return [
-                    ...prevItems,
-                    {
-                        ...productToAdd,
-                        quantity: quantity,
-                    },
-                ];
-            }
+        addToCart(productId, quantity, productToAdd);
+        toast({
+            title: "Success",
+            description: `${productToAdd.name} added to cart`,
         });
     };
-
-    const totalCartItems = cartItems.reduce(
-        (sum, item) => sum + item.quantity,
-        0
-    );
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -137,9 +104,9 @@ const Shop: React.FC = () => {
                     className="ml-4 relative"
                 >
                     <ShoppingCart className="h-5 w-5" />
-                    {totalCartItems > 0 && (
+                    {totalItems > 0 && (
                         <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
-                            {totalCartItems}
+                            {totalItems}
                         </span>
                     )}
                 </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Trash2, Plus, Minus } from "lucide-react";
@@ -11,9 +11,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from "./ui/select";
-import { CartItem, Product } from "@/app/types/shop";
+import { Product } from "@/app/types/shop";
 import { useAuth } from "@clerk/nextjs";
 import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/context/cartContext";
 
 const SAMPLE_PRODUCTS: Product[] = [
     //remove when API is out
@@ -23,7 +24,7 @@ const SAMPLE_PRODUCTS: Product[] = [
         description: "Description of Product 1",
         price: 19.99,
         imageUrl: "/api/placeholder/300/200",
-        quantity: 0,
+        quantity: 200,
     },
     {
         id: "2",
@@ -45,96 +46,38 @@ const SAMPLE_PRODUCTS: Product[] = [
 
 const Cart = () => {
     const { userId } = useAuth();
-    const [cartItems, setCartItems] = useState<CartItem[]>([]);
-    const [isCheckingOut, SetIsCheckingOut] = useState(false);
-    const [isClient, setIsClient] = useState(false);
+    const [isCheckingOut, setIsCheckingOut] = useState(false);
     const { toast } = useToast();
-
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
-
-    useEffect(() => {
-        if (!userId) {
-            localStorage.removeItem("cart");
-            setCartItems([]);
-        }
-    }, [userId]);
-
-    useEffect(() => {
-        if (typeof window !== "undefined") {
-            const saved = localStorage.getItem("cart");
-            if (saved) {
-                try {
-                    const parsedCart = JSON.parse(saved);
-                    const validCart = parsedCart.every(
-                        (item: any) =>
-                            item.id &&
-                            typeof item.price === "number" &&
-                            typeof item.quantity === "number"
-                    );
-                    if (validCart) {
-                        setCartItems(parsedCart);
-                    } else {
-                        console.error("Invalid cart data detected");
-                        localStorage.removeItem("cart");
-                    }
-                } catch (error) {
-                    console.error("Error parsing cart data:", error);
-                    localStorage.removeItem("cart");
-                }
-            }
-        }
-    }, []);
-
-    if (!isClient) {
-        return null;
-    }
-
-    const updateCart = (updatedCart: CartItem[]) => {
-        setCartItems(updatedCart);
-        localStorage.setItem("cart", JSON.stringify(updatedCart));
-    };
-
-    const removeFromCart = (productId: string) => {
-        const updatedCart = cartItems.filter((item) => item.id !== productId);
-        updateCart(updatedCart);
-    };
-
-    const updateQuantity = (productId: string, newQuantity: number) => {
-        if (newQuantity === 0) {
-            removeFromCart(productId);
-            return;
-        }
-
-        const updatedCart = cartItems.map((item) =>
-            item.id === productId ? { ...item, quantity: newQuantity } : item
-        );
-        updateCart(updatedCart);
-    };
+    const { cartItems, removeFromCart, updateQuantity, clearCart } = useCart();
 
     const totalAmount = cartItems.reduce(
         (total, item) => total + item.price * item.quantity,
         0
     );
 
+    const handleQuantityChange = (productId: string, newQuantity: number) => {
+        const product = SAMPLE_PRODUCTS.find((p) => p.id === productId);
+
+        if (product && newQuantity > product.quantity) {
+            toast({
+                title: "Error",
+                description: "Not enough stock available",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        updateQuantity(productId, newQuantity);
+    };
+
     const handleCheckout = async () => {
         if (!userId || cartItems.length === 0) return;
-        console.log("checkout");
 
-        SetIsCheckingOut(true);
+        setIsCheckingOut(true);
         try {
-            // make sure to integrate this with API
-            /*
-            const shopResponse = await fetch('/api/shop/items');
-            if (!shopResponse.ok) {
-                throw new Error('Failed to fetch shop items');
-            }
-                */
-            const shopItems: Product[] = SAMPLE_PRODUCTS;
-
             const outOfStockItems = cartItems.filter((cartItem) => {
-                const shopItem = shopItems.find(
+                const shopItem = SAMPLE_PRODUCTS.find(
+                    //replace with API
                     (item) => item.id === cartItem.id
                 );
                 return !shopItem || shopItem.quantity < cartItem.quantity;
@@ -162,33 +105,16 @@ const Cart = () => {
                 totalPrice: totalAmount,
                 datetime: new Date().toISOString(),
             };
-            console.log(transaction);
 
-            /*
-            const transactionResponse = await fetch('/api/transactions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(transaction),
-            });
-            
-            if (!transactionResponse.ok) {
-                throw new Error('Failed to create transaction');
-            }
+            // TODO: Replace with actual API call
+            console.log("Processing transaction:", transaction);
 
-            const result = await transactionResponse.json();
-            
-            // Clear cart and show success message
-            localStorage.removeItem("cart");
-            setCartItems([]);
-            
+            clearCart();
+
             toast({
                 title: "Purchase Successful",
-                description: `Transaction ID: ${result.transactionId}`,
-                variant: "default",
+                description: "Your order has been processed successfully",
             });
-            */
         } catch (error) {
             console.error("Checkout error:", error);
             toast({
@@ -198,7 +124,7 @@ const Cart = () => {
                 variant: "destructive",
             });
         } finally {
-            SetIsCheckingOut(false);
+            setIsCheckingOut(false);
         }
     };
 
@@ -233,7 +159,7 @@ const Cart = () => {
                                                 variant="outline"
                                                 size="icon"
                                                 onClick={() =>
-                                                    updateQuantity(
+                                                    handleQuantityChange(
                                                         item.id,
                                                         Math.max(
                                                             0,
@@ -248,7 +174,7 @@ const Cart = () => {
                                             <Select
                                                 value={item.quantity.toString()}
                                                 onValueChange={(value) =>
-                                                    updateQuantity(
+                                                    handleQuantityChange(
                                                         item.id,
                                                         parseInt(value)
                                                     )
@@ -275,7 +201,7 @@ const Cart = () => {
                                                 variant="outline"
                                                 size="icon"
                                                 onClick={() =>
-                                                    updateQuantity(
+                                                    handleQuantityChange(
                                                         item.id,
                                                         item.quantity + 1
                                                     )
@@ -288,8 +214,7 @@ const Cart = () => {
                                         <p className="font-medium ml-auto">
                                             $
                                             {(
-                                                (item.price || 0) *
-                                                item.quantity
+                                                item.price * item.quantity
                                             ).toFixed(2)}
                                         </p>
                                     </div>

@@ -1,6 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import React from "react";
-import { dark, neobrutalism } from "@clerk/themes";
+import { CartProvider } from "@/context/cartContext";
 import "@/app/globals.css";
 
 export default function RootLayout({
@@ -9,10 +9,12 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <ClerkProvider afterSignOutUrl={"/"}>
-            <html lang="en">
-                <body>{children}</body>
-            </html>
-        </ClerkProvider>
+        <html lang="en">
+            <body>
+                <ClerkProvider afterSignOutUrl={"/"}>
+                    <CartProvider>{children}</CartProvider>
+                </ClerkProvider>
+            </body>
+        </html>
     );
 }
