@@ -11,12 +11,43 @@ import {
     SelectTrigger,
     SelectValue,
 } from "./ui/select";
-import { CartItem } from "@/app/types/shop";
+import { CartItem, Product } from "@/app/types/shop";
 import { useAuth } from "@clerk/nextjs";
+import { useToast } from "@/hooks/use-toast";
+
+const SAMPLE_PRODUCTS: Product[] = [
+    //remove when API is out
+    {
+        id: "1",
+        name: "Product 1",
+        description: "Description of Product 1",
+        price: 19.99,
+        imageUrl: "/api/placeholder/300/200",
+        quantity: 0,
+    },
+    {
+        id: "2",
+        name: "Product 2",
+        description: "Description of Product 2",
+        price: 29.99,
+        imageUrl: "/api/placeholder/300/200",
+        quantity: 100,
+    },
+    {
+        id: "3",
+        name: "Product 3",
+        description: "Description of Product 3",
+        price: 39.99,
+        imageUrl: "/api/placeholder/300/200",
+        quantity: 0,
+    },
+];
 
 const Cart = () => {
     const { userId } = useAuth();
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
+    const [isCheckingOut, SetIsCheckingOut] = useState(false);
+    const { toast } = useToast();
 
     useEffect(() => {
         if (!userId) {
@@ -75,6 +106,89 @@ const Cart = () => {
         (total, item) => total + item.price * item.quantity,
         0
     );
+
+    const handleCheckout = async () => {
+        if (!userId || cartItems.length === 0) return;
+
+        SetIsCheckingOut(true);
+        try {
+            // make sure to integrate this with API
+            /*
+            const shopResponse = await fetch('/api/shop/items');
+            if (!shopResponse.ok) {
+                throw new Error('Failed to fetch shop items');
+            }
+                */
+            const shopItems: Product[] = SAMPLE_PRODUCTS;
+
+            const outOfStockItems = cartItems.filter((cartItem) => {
+                const shopItem = shopItems.find(
+                    (item) => item.id === cartItem.id
+                );
+                return !shopItem || shopItem.quantity < cartItem.quantity;
+            });
+
+            if (outOfStockItems.length > 0) {
+                const itemNames = outOfStockItems
+                    .map((item) => item.name)
+                    .join(", ");
+                toast({
+                    title: "Items Out of Stock",
+                    description: `The following items are no longer available in the requested quantity: ${itemNames}`,
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            const transaction = {
+                userId,
+                items: cartItems.map((item) => ({
+                    productId: item.id,
+                    quantity: item.quantity,
+                    pricePerUnit: item.price,
+                })),
+                totalPrice: totalAmount,
+                datetime: new Date().toISOString(),
+            };
+            console.log(transaction);
+
+            /*
+            const transactionResponse = await fetch('/api/transactions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(transaction),
+            });
+            
+            if (!transactionResponse.ok) {
+                throw new Error('Failed to create transaction');
+            }
+
+            const result = await transactionResponse.json();
+            
+            // Clear cart and show success message
+            localStorage.removeItem("cart");
+            setCartItems([]);
+            
+            toast({
+                title: "Purchase Successful",
+                description: `Transaction ID: ${result.transactionId}`,
+                variant: "default",
+            });
+            */
+        } catch (error) {
+            console.error("Checkout error:", error);
+            toast({
+                title: "Checkout Failed",
+                description:
+                    "There was an error processing your checkout. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            SetIsCheckingOut(false);
+        }
+    };
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -186,8 +300,14 @@ const Cart = () => {
                                 ${totalAmount.toFixed(2)}
                             </span>
                         </div>
-                        <Button className="w-full mt-4">
-                            Proceed to Checkout
+                        <Button
+                            className="w-full mt-4"
+                            onClick={handleCheckout}
+                            disabled={isCheckingOut || cartItems.length === 0}
+                        >
+                            {isCheckingOut
+                                ? "Processing..."
+                                : "Proceed to Checkout"}
                         </Button>
                     </div>
                 </div>
