@@ -47,7 +47,12 @@ const Cart = () => {
     const { userId } = useAuth();
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [isCheckingOut, SetIsCheckingOut] = useState(false);
+    const [isClient, setIsClient] = useState(false);
     const { toast } = useToast();
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     useEffect(() => {
         if (!userId) {
@@ -57,28 +62,34 @@ const Cart = () => {
     }, [userId]);
 
     useEffect(() => {
-        const saved = localStorage.getItem("cart");
-        if (saved) {
-            try {
-                const parsedCart = JSON.parse(saved);
-                const validCart = parsedCart.every(
-                    (item: any) =>
-                        item.id &&
-                        typeof item.price === "number" &&
-                        typeof item.quantity === "number"
-                );
-                if (validCart) {
-                    setCartItems(parsedCart);
-                } else {
-                    console.error("Invalid cart data detected");
+        if (typeof window !== "undefined") {
+            const saved = localStorage.getItem("cart");
+            if (saved) {
+                try {
+                    const parsedCart = JSON.parse(saved);
+                    const validCart = parsedCart.every(
+                        (item: any) =>
+                            item.id &&
+                            typeof item.price === "number" &&
+                            typeof item.quantity === "number"
+                    );
+                    if (validCart) {
+                        setCartItems(parsedCart);
+                    } else {
+                        console.error("Invalid cart data detected");
+                        localStorage.removeItem("cart");
+                    }
+                } catch (error) {
+                    console.error("Error parsing cart data:", error);
                     localStorage.removeItem("cart");
                 }
-            } catch (error) {
-                console.error("Error parsing cart data:", error);
-                localStorage.removeItem("cart");
             }
         }
     }, []);
+
+    if (!isClient) {
+        return null;
+    }
 
     const updateCart = (updatedCart: CartItem[]) => {
         setCartItems(updatedCart);
@@ -109,6 +120,7 @@ const Cart = () => {
 
     const handleCheckout = async () => {
         if (!userId || cartItems.length === 0) return;
+        console.log("checkout");
 
         SetIsCheckingOut(true);
         try {
