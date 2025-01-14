@@ -1,8 +1,8 @@
-type userRole = "Resident" | "Admin";
+type userRole = "resident" | "admin";
 
 export interface User {
-    id: string; // Clerk User ID
-    name: string; // From Clerk
+    id: string;
+    name: string;
     role: userRole;
     voucherBalance: number;
     status: "ACTIVE" | "SUSPENDED";
