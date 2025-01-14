@@ -1,5 +1,6 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 
 export async function GET() {
     try {
@@ -115,6 +116,62 @@ export async function DELETE(req: Request) {
         console.error("Error deleting user:", error);
         return NextResponse.json(
             { error: "Failed to delete user" },
+            { status: 500 }
+        );
+    }
+}
+
+export async function POST(request: Request) {
+    try {
+        const { userId } = await auth();
+        if (!userId) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        const data = await request.json();
+        const { name, phoneNumber, username, password, role } = data;
+
+        const client = await clerkClient();
+
+        const nameParts = name.split(" ");
+        const firstName = nameParts[0];
+        const lastName = nameParts.slice(1).join(" ") || "";
+
+        const publicMetadata = {
+            role: role,
+            ...(role === "resident" && { voucherBalance: 0 }),
+        };
+
+        const user = await client.users.createUser({
+            username,
+            password,
+            firstName,
+            lastName,
+            phoneNumber: [phoneNumber],
+            publicMetadata,
+            skipPasswordChecks: true,
+            skipPasswordRequirement: true,
+        });
+
+        return NextResponse.json({
+            message: "User created",
+            user,
+        });
+    } catch (error: any) {
+        console.error("Error creating user:", error);
+
+        if (error.clerkError) {
+            return NextResponse.json(
+                { error: error.errors?.[0]?.longMessage || "Clerk API Error" },
+                { status: 422 }
+            );
+        }
+
+        return NextResponse.json(
+            { error: "Error creating user" },
             { status: 500 }
         );
     }

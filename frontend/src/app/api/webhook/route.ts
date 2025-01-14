@@ -3,7 +3,6 @@ import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import VoucherBalance from "@/components/voucherBalance";
 
 export async function POST(req: Request) {
     const headerPayload = headers();

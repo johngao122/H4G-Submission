@@ -420,7 +420,7 @@ export function UserManagementDataTable() {
     );
 
     const handleAddUser = () => {
-        router.push("/admin/users/add");
+        router.push("/admin/dashboard/users/createUser");
     };
 
     return (

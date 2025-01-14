@@ -21,3 +21,16 @@ export interface UserResponse {
     data?: User;
     error?: string;
 }
+
+export interface UserFormData {
+    name: string;
+    phoneNumber: string;
+    username: string;
+    password: string;
+    role: "resident" | "admin";
+}
+
+export interface UserMetadata {
+    role: "resident" | "admin";
+    voucherBalance?: number;
+}
