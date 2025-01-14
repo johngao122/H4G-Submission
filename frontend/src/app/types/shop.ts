@@ -22,4 +22,10 @@ interface CartItem extends Product {
     quantity: number;
 }
 
-export type { ShopItemProps, Product, CartItem };
+interface ProductTableProps {
+    products: Product[];
+    onDeleteProduct: (id: string) => void;
+    onUpdateProduct: (product: Product) => void;
+}
+
+export type { ShopItemProps, Product, CartItem, ProductTableProps };
