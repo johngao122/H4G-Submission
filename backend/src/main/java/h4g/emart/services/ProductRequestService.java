@@ -16,6 +16,9 @@ public class ProductRequestService {
     @Autowired
     private ProductRequestRepository productRequestRepository;
 
+    @Autowired
+    private SequenceGeneratorService sequenceGeneratorService;
+
     /**
      * Retrieves all product requests.
      * @return a list of all product requests.
@@ -49,7 +52,7 @@ public class ProductRequestService {
      * @return the created product request.
      */
     public ProductRequest createProductRequest(ProductRequest productRequest) {
-        productRequest.setRequestId(SequenceGeneratorService.generateId("ProductRequest"));
+        productRequest.setRequestId(sequenceGeneratorService.generateId("ProductRequest"));
         return productRequestRepository.save(productRequest);
     }
 

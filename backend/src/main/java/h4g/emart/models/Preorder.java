@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import h4g.emart.models.PreorderStatus;
 import h4g.emart.services.PreorderService;
@@ -20,8 +21,11 @@ public class Preorder {
     private @Getter @Setter int qtyPreordered;
     private @Getter @Setter double totalPrice;
     private @Getter @Setter LocalDateTime datetime;
+    @JsonProperty("status")
     private @Getter @Setter PreorderStatus status;
 
+    public Preorder() {}
+    
     public Preorder(String preorderId, String userId, String productId, int qtyPreordered, double totalPrice,
             LocalDateTime datetime, PreorderStatus status) {
         this.preorderId = preorderId;

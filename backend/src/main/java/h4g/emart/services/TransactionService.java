@@ -26,6 +26,9 @@ public class TransactionService {
 
     @Autowired
     private ProductService productService;
+    
+    @Autowired
+    private SequenceGeneratorService sequenceGeneratorService;
 
     /**
      * Retrieves all transactions.
@@ -100,7 +103,7 @@ public class TransactionService {
         user.deductBal(totalPrice);
         userService.updateUser(user.getUserId(), user);
 
-        transaction.setTransactionId(SequenceGeneratorService.generateId("Transaction"));
+        transaction.setTransactionId(sequenceGeneratorService.generateId("Transaction"));
         transaction.setTotalPrice(totalPrice);
 
         // Save the transaction

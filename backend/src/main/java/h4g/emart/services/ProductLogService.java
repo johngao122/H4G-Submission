@@ -16,9 +16,12 @@ public class ProductLogService {
     @Autowired
     private ProductLogRepository productLogRepository;
 
+    @Autowired
+    private SequenceGeneratorService sequenceGeneratorService;
+
     public void createProductLog(String userId, String productId, String action) {
         ProductLog newProductLog = new ProductLog(
-            SequenceGeneratorService.generateId("ProductLog"),
+            sequenceGeneratorService.generateId("ProductLog"),
             userId,
             productId,
             LocalDateTime.now(),

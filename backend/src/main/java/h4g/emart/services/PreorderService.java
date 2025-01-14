@@ -29,6 +29,9 @@ public class PreorderService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private SequenceGeneratorService sequenceGeneratorService;
+
     /**
      * Creates a new preorder.
      * 
@@ -38,7 +41,7 @@ public class PreorderService {
     public Preorder createPreorder(Preorder preorder) {
         Product product = productService.getProductById(preorder.getProductId());
         if (userRepository.existsById(preorder.getUserId()) && product != null) {
-            preorder.setPreorderId(SequenceGeneratorService.generateId("Preorder"));
+            preorder.setPreorderId(sequenceGeneratorService.generateId("Preorder"));
             preorder.setTotalPrice(product.getPrice() * preorder.getQtyPreordered());
             return preorderRepository.save(preorder);
         }

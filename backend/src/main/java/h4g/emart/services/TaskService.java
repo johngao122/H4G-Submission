@@ -23,13 +23,16 @@ public class TaskService {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private SequenceGeneratorService sequenceGeneratorService;
+
     /**
      * Creates a new task.
      * @param task The task object to create.
      * @return The created task.
      */
     public Task createTask(Task task) {
-        task.setTaskId(SequenceGeneratorService.generateId("Task"));
+        task.setTaskId(sequenceGeneratorService.generateId("Task"));
         return taskRepository.save(task);
     }
 

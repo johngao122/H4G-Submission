@@ -101,7 +101,7 @@ public class UserController {
      * NOTE: Should only be accessible by admin to forcibly inject/extract from a user's balance
      */
     @PostMapping("/{userId}/addBalance")
-    public ResponseEntity<User> addBalance(@PathVariable String userId, @RequestBody long amount) {
+    public ResponseEntity<User> addBalance(@PathVariable String userId, @RequestBody double amount) {
         User user = userService.addBalance(userId, amount);
         if (user != null) {
             return new ResponseEntity<>(user, HttpStatus.OK);
@@ -120,7 +120,7 @@ public class UserController {
      * NOTE: Should only be accessible by admin to forcibly inject/extract from a user's balance
      */
     @PostMapping("/{userId}/deductBalance")
-    public ResponseEntity<User> deductBalance(@PathVariable String userId, @RequestBody long amount) {
+    public ResponseEntity<User> deductBalance(@PathVariable String userId, @RequestBody double amount) {
         User user = userService.deductBalance(userId, amount);
         if (user != null) {
             return new ResponseEntity<>(user, HttpStatus.OK);

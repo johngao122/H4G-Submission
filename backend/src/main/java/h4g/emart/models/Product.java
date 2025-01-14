@@ -20,6 +20,8 @@ public class Product {
     private @Getter @Setter long quantity;
     private @Getter @Setter byte[] productPhoto;
 
+    public Product() {}
+    
     public Product(String productId, String name, String category, String desc, double price, long quantity,
             byte[] productPhoto) {
         this.productId = productId;

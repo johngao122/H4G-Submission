@@ -101,7 +101,7 @@ public class ProductController {
      *         or HTTP status 404 (Not Found) if the product does not exist.
      */
     @PatchMapping("/{productId}/quantity")
-    public ResponseEntity<Product> updateProductQuantity(@PathVariable String productId, @RequestParam int quantity, @RequestHeader String userId) {
+    public ResponseEntity<Product> updateProductQuantity(@PathVariable String productId, @RequestBody long quantity, @RequestHeader String userId) {
         Product product = productService.updateProductQuantity(productId, quantity, userId);
         if (product != null) {
             return new ResponseEntity<>(product, HttpStatus.OK);

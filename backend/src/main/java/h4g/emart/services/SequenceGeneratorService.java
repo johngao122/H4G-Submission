@@ -16,9 +16,9 @@ import h4g.emart.models.Sequence;
 public class SequenceGeneratorService {
 
     @Autowired
-    private static MongoOperations mongoOperations;
+    private MongoOperations mongoOperations;
 
-    public static String generateId(String seqName) {
+    public String generateId(String seqName) {
         long seq = generateSequence(seqName);
         String prefix = "";
         switch (seqName) {
@@ -47,7 +47,7 @@ public class SequenceGeneratorService {
         return prefix + seq;
     }
 
-    public static long generateSequence(String seqName) {
+    public long generateSequence(String seqName) {
         Query query = new Query(Criteria.where("_id").is(seqName));
         Update update = new Update().inc("seq", 1);
         Sequence counter = mongoOperations.findAndModify(query, update, 

@@ -28,7 +28,7 @@ public class Transaction {
         this.datetime = LocalDateTime.now();
     }
 
-    public Transaction(String userId, String productId, int qtyPurchased, double totalPrice) {
+    public Transaction(String userId, String productId, int qtyPurchased) {
         this.userId = userId;
         this.productId = productId;
         this.qtyPurchased = qtyPurchased;

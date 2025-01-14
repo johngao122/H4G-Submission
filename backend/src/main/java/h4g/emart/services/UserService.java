@@ -18,9 +18,12 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private SequenceGeneratorService sequenceGeneratorService;
+
     // Create a new user
     public User createUser(User user) {
-        user.setUserId(SequenceGeneratorService.generateId("User"));
+        user.setUserId(sequenceGeneratorService.generateId("User"));
         return userRepository.save(user);
     }
 
@@ -54,7 +57,7 @@ public class UserService {
     }
 
     // Add balance to a user's account
-    public User addBalance(String userId, long amount) {
+    public User addBalance(String userId, double amount) {
         User user = getUserById(userId);
         if (user != null) {
             user.addBal(amount);
@@ -64,7 +67,7 @@ public class UserService {
     }
 
     // Deduct balance from a user's account
-    public User deductBalance(String userId, long amount) {
+    public User deductBalance(String userId, double amount) {
         User user = getUserById(userId);
         if (user != null && user.getVoucherBal() >= amount) {
             user.deductBal(amount);

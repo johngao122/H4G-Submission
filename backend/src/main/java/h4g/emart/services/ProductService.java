@@ -2,6 +2,8 @@ package h4g.emart.services;
 
 import h4g.emart.models.Product;
 import h4g.emart.repositories.ProductRepository;
+import h4g.emart.services.ProductLogService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,9 @@ public class ProductService {
     @Autowired
     private ProductLogService productLogService;
 
+    @Autowired
+    private SequenceGeneratorService sequenceGeneratorService;
+
     // 1. Get all Products (Read)
     public List<Product> getAllProducts() {
         return productRepository.findAll();
@@ -30,7 +35,7 @@ public class ProductService {
 
     // 3. Create a Product (Create)
     public Product createProduct(Product product, String userId) {
-        product.setProductId(SequenceGeneratorService.generateId("Product"));
+        product.setProductId(sequenceGeneratorService.generateId("Product"));
         productLogService.createProductLog(userId, product.getProductId(), "CREATE:" + product.toString());
         return productRepository.save(product);
     }
@@ -56,7 +61,7 @@ public class ProductService {
         return productRepository.save(updatedProduct);
     }
 
-    public Product updateProductQuantity(String productId, int quantity, String userId) {
+    public Product updateProductQuantity(String productId, long quantity, String userId) {
         Optional<Product> existingProductOptional = productRepository.findById(productId);
         if (existingProductOptional.isPresent()) {
             Product existingProduct = existingProductOptional.get();

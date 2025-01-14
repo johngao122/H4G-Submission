@@ -2,6 +2,7 @@ package h4g.emart.models;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -12,9 +13,13 @@ public class User {
     @Id
     private @Getter @Setter String userId;
     private @Getter @Setter String name;
+    @JsonProperty("role")
     private @Getter @Setter Role role;
     private @Getter double voucherBal;
-    private @Getter @Setter UserStatus status;
+    @JsonProperty("status")
+    private @Getter @Setter UserStatus status = UserStatus.ACTIVE;
+
+    public User() {}
 
     public User(String userId, String name, Role role, double voucherBal, UserStatus userStatus) {
         this.userId = userId;
@@ -24,11 +29,10 @@ public class User {
         this.status = userStatus;
     }
 
-    public User(String name, Role role, double voucherBal, UserStatus userStatus) {
+    public User(String name, Role role, double voucherBal) {
         this.name = name;
         this.role = role;
         this.voucherBal = voucherBal;
-        this.status = userStatus;
     }
 
     public void addBal(double amount) {
