@@ -25,6 +25,7 @@ const SAMPLE_PRODUCTS: Product[] = [
         price: 19.99,
         imageUrl: "/api/placeholder/300/200",
         quantity: 200,
+        Category: "Category 1",
     },
     {
         id: "2",
@@ -33,6 +34,7 @@ const SAMPLE_PRODUCTS: Product[] = [
         price: 29.99,
         imageUrl: "/api/placeholder/300/200",
         quantity: 100,
+        Category: "Category 2",
     },
     {
         id: "3",
@@ -41,6 +43,7 @@ const SAMPLE_PRODUCTS: Product[] = [
         price: 39.99,
         imageUrl: "/api/placeholder/300/200",
         quantity: 0,
+        Category: "Category 3",
     },
 ];
 

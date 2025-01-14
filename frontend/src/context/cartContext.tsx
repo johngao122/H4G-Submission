@@ -92,6 +92,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                     quantity: quantity,
                     imageUrl: product.imageUrl,
                     description: product.description,
+                    Category: product.Category,
                 },
             ];
         });
