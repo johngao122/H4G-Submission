@@ -1,6 +1,7 @@
 import { useUser, useClerk } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AlertTriangle } from "lucide-react";
 
 export function useAdminAuth() {
     const { isSignedIn, user, isLoaded } = useUser();
@@ -31,47 +32,44 @@ export function useAdminAuth() {
     };
 
     const AccessDenied = () => (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-                <div className="text-center mb-6">
-                    <svg
-                        className="mx-auto h-12 w-12 text-red-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                        />
-                    </svg>
-                </div>
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-50">
+            <div className="w-full max-w-md mx-4">
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div className="p-6">
+                        <div className="flex justify-center mb-6">
+                            <div className="p-3 rounded-full bg-red-100">
+                                <AlertTriangle className="h-8 w-8 text-red-600" />
+                            </div>
+                        </div>
 
-                <h1 className="text-2xl font-bold text-red-600 mb-4 text-center">
-                    Access Denied
-                </h1>
+                        <h2 className="text-2xl font-semibold text-red-600 text-center mb-4">
+                            Access Denied
+                        </h2>
 
-                <p className="text-gray-600 mb-6 text-center">
-                    You do not have permission to access the admin portal. This
-                    area is restricted to administrators only.
-                </p>
+                        <p className="text-gray-600 text-center mb-8">
+                            You do not have permission to access the admin
+                            portal. This area is restricted to administrators
+                            only.
+                        </p>
 
-                <div className="space-y-4">
-                    <a
-                        href="/resident/dashboard"
-                        className="block w-full text-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                        Go to Resident Dashboard
-                    </a>
+                        <div className="space-y-3">
+                            <button
+                                onClick={() =>
+                                    router.push("/resident/dashboard")
+                                }
+                                className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                            >
+                                Go to Resident Dashboard
+                            </button>
 
-                    <button
-                        onClick={handleSwitchAccount}
-                        className="block w-full text-center bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors"
-                    >
-                        Switch Account
-                    </button>
+                            <button
+                                onClick={handleSwitchAccount}
+                                className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors"
+                            >
+                                Switch Account
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
