@@ -5,7 +5,9 @@ import {
     Column,
     ColumnDef,
     ColumnFiltersState,
+    Row,
     SortingState,
+    Table as TableType,
     VisibilityState,
     flexRender,
     getCoreRowModel,
@@ -14,6 +16,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table";
+import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import {
@@ -46,6 +49,289 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/app/types/user";
 import { useRouter } from "next/navigation";
+
+interface ResponsiveHeaderProps {
+    table: TableType<User>;
+    selectedRows: Row<User>[];
+    isLoading: boolean;
+    onAddUser: () => void;
+    onBulkAction: (action: string) => void;
+    onDeleteUsers: (userIds: string[]) => void;
+}
+
+interface MobileCardViewProps {
+    table: TableType<User>;
+    isLoading: boolean;
+    onUpdateUser: (userId: string, action: string, data?: any) => Promise<void>;
+}
+
+const ResponsiveHeader: React.FC<ResponsiveHeaderProps> = ({
+    table,
+    selectedRows,
+    isLoading,
+    onAddUser,
+    onBulkAction,
+    onDeleteUsers,
+}) => {
+    const hasSelectedSuspendedUsers = selectedRows.some(
+        (row) => row.original.status === "SUSPENDED"
+    );
+    const hasSelectedActiveUsers = selectedRows.some(
+        (row) => row.original.status === "ACTIVE"
+    );
+
+    return (
+        <div className="flex flex-col space-y-4 mb-6 sm:space-y-0">
+            <div className="flex flex-col space-y-2 sm:flex-row sm:justify-between sm:items-center">
+                <div>
+                    <h1 className="text-2xl font-bold">User Management</h1>
+                    <p className="text-sm text-muted-foreground">
+                        {selectedRows.length} of{" "}
+                        {table.getFilteredRowModel().rows.length} row(s)
+                        selected.
+                    </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    <Button
+                        disabled={isLoading}
+                        onClick={onAddUser}
+                        className="w-full sm:w-auto"
+                    >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add User
+                    </Button>
+                    {hasSelectedSuspendedUsers && (
+                        <Button
+                            variant="outline"
+                            disabled={isLoading}
+                            onClick={() => onBulkAction("ACTIVATE")}
+                            className="w-full sm:w-auto"
+                        >
+                            {isLoading ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <UserCog className="mr-2 h-4 w-4" />
+                            )}
+                            Unsuspend Selected
+                        </Button>
+                    )}
+                    {hasSelectedActiveUsers && (
+                        <Button
+                            variant="destructive"
+                            disabled={isLoading}
+                            onClick={() => onBulkAction("SUSPEND")}
+                            className="w-full sm:w-auto"
+                        >
+                            {isLoading ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <UserCog className="mr-2 h-4 w-4" />
+                            )}
+                            Suspend Selected
+                        </Button>
+                    )}
+                    <Button
+                        variant="destructive"
+                        disabled={isLoading || selectedRows.length === 0}
+                        onClick={() => {
+                            const selectedIds = selectedRows.map(
+                                (row) => row.original.id
+                            );
+                            onDeleteUsers(selectedIds);
+                        }}
+                        className="w-full sm:w-auto"
+                    >
+                        {isLoading ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Trash2 className="mr-2 h-4 w-4" />
+                        )}
+                        Delete Selected
+                    </Button>
+                </div>
+            </div>
+
+            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2">
+                <Input
+                    placeholder="Filter names..."
+                    value={
+                        (table.getColumn("name")?.getFilterValue() as string) ??
+                        ""
+                    }
+                    onChange={(event) =>
+                        table
+                            .getColumn("name")
+                            ?.setFilterValue(event.target.value)
+                    }
+                    className="w-full sm:max-w-sm"
+                />
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="w-full sm:w-auto">
+                            Columns
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        {table
+                            .getAllColumns()
+                            .filter((column) => column.getCanHide())
+                            .map((column) => (
+                                <DropdownMenuCheckboxItem
+                                    key={column.id}
+                                    className="capitalize"
+                                    checked={column.getIsVisible()}
+                                    onCheckedChange={(value) =>
+                                        column.toggleVisibility(!!value)
+                                    }
+                                >
+                                    {column.id}
+                                </DropdownMenuCheckboxItem>
+                            ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+        </div>
+    );
+};
+
+const MobileCardView: React.FC<MobileCardViewProps> = ({
+    table,
+    isLoading,
+    onUpdateUser,
+}) => {
+    return (
+        <div className="space-y-4 md:hidden">
+            {table.getRowModel().rows.map((row) => (
+                <Card key={row.id}>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    checked={row.getIsSelected()}
+                                    onCheckedChange={(value) =>
+                                        row.toggleSelected(!!value)
+                                    }
+                                    aria-label="Select row"
+                                    className="translate-y-[2px]"
+                                />
+                                <div>
+                                    <p className="font-medium">
+                                        {row.getValue("name")}
+                                    </p>
+                                    <p className="text-sm text-gray-500">
+                                        {row.getValue("id")}
+                                    </p>
+                                </div>
+                            </div>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        className="h-8 w-8 p-0"
+                                        disabled={isLoading}
+                                    >
+                                        <span className="sr-only">
+                                            Open menu
+                                        </span>
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>
+                                        Actions
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                        onClick={() => {
+                                            /* Handle edit */
+                                        }}
+                                        disabled={isLoading}
+                                    >
+                                        Edit User
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() => {
+                                            /* Handle password reset */
+                                        }}
+                                        disabled={isLoading}
+                                    >
+                                        Reset Password
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            onUpdateUser(
+                                                row.original.id,
+                                                row.original.status === "ACTIVE"
+                                                    ? "SUSPEND"
+                                                    : "ACTIVATE"
+                                            )
+                                        }
+                                        disabled={isLoading}
+                                        className={
+                                            row.original.status === "ACTIVE"
+                                                ? "text-red-600"
+                                                : "text-green-600"
+                                        }
+                                    >
+                                        {row.original.status === "ACTIVE"
+                                            ? "Suspend User"
+                                            : "Unsuspend User"}
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+
+                        {/* User Details */}
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">Role:</span>
+                                <Badge
+                                    variant={
+                                        row.getValue("role") === "admin"
+                                            ? "default"
+                                            : "secondary"
+                                    }
+                                >
+                                    {row.getValue("role")}
+                                </Badge>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">Status:</span>
+                                <Badge
+                                    variant={
+                                        row.getValue("status") === "ACTIVE"
+                                            ? "default"
+                                            : "destructive"
+                                    }
+                                >
+                                    {row.getValue("status")}
+                                </Badge>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">Balance:</span>
+                                <span>
+                                    {row.original.role === "admin"
+                                        ? "N/A"
+                                        : `$${row.original.voucherBalance.toFixed(
+                                              2
+                                          )}`}
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">Created:</span>
+                                <span>
+                                    {new Date(
+                                        row.getValue("createdAt")
+                                    ).toLocaleDateString()}
+                                </span>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    );
+};
 
 export function UserManagementDataTable() {
     const router = useRouter();
@@ -424,183 +710,104 @@ export function UserManagementDataTable() {
     };
 
     return (
-        <div className="container mx-auto py-10">
-            <div className="flex justify-between items-center mb-6">
-                <div>
-                    <h1 className="text-2xl font-bold">User Management</h1>
-                    <p className="text-sm text-muted-foreground">
-                        {selectedRows.length} of{" "}
-                        {table.getFilteredRowModel().rows.length} row(s)
-                        selected.
-                    </p>
+        <div className="container mx-auto py-10 px-4">
+            {isLoading && users.length === 0 ? (
+                <div className="flex items-center justify-center h-96">
+                    <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
-                <div className="space-x-2">
-                    <Button disabled={isLoading} onClick={handleAddUser}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add User
-                    </Button>
-                    {hasSelectedSuspendedUsers && (
+            ) : (
+                <>
+                    <ResponsiveHeader
+                        table={table}
+                        selectedRows={table.getFilteredSelectedRowModel().rows}
+                        isLoading={isLoading}
+                        onAddUser={handleAddUser}
+                        onBulkAction={handleBulkAction}
+                        onDeleteUsers={handleDeleteUsers}
+                    />
+
+                    <div className="hidden md:block rounded-md border">
+                        <Table>
+                            <TableHeader>
+                                {table.getHeaderGroups().map((headerGroup) => (
+                                    <TableRow key={headerGroup.id}>
+                                        {headerGroup.headers.map((header) => (
+                                            <TableHead key={header.id}>
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                          header.column
+                                                              .columnDef.header,
+                                                          header.getContext()
+                                                      )}
+                                            </TableHead>
+                                        ))}
+                                    </TableRow>
+                                ))}
+                            </TableHeader>
+                            <TableBody>
+                                {table.getRowModel().rows?.length ? (
+                                    table.getRowModel().rows.map((row) => (
+                                        <TableRow
+                                            key={row.id}
+                                            data-state={
+                                                row.getIsSelected() &&
+                                                "selected"
+                                            }
+                                        >
+                                            {row
+                                                .getVisibleCells()
+                                                .map((cell) => (
+                                                    <TableCell key={cell.id}>
+                                                        {flexRender(
+                                                            cell.column
+                                                                .columnDef.cell,
+                                                            cell.getContext()
+                                                        )}
+                                                    </TableCell>
+                                                ))}
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={columns.length}
+                                            className="h-24 text-center"
+                                        >
+                                            No results.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                    <MobileCardView
+                        table={table}
+                        isLoading={isLoading}
+                        onUpdateUser={handleUpdateUser}
+                    />
+
+                    <div className="flex items-center justify-end space-x-2 py-4">
                         <Button
                             variant="outline"
-                            disabled={isLoading}
-                            onClick={() => handleBulkAction("ACTIVATE")}
+                            size="sm"
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
                         >
-                            {isLoading ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                                <UserCog className="mr-2 h-4 w-4" />
-                            )}
-                            Unsuspend Selected
+                            Previous
                         </Button>
-                    )}
-                    {hasSelectedActiveUsers && (
                         <Button
-                            variant="destructive"
-                            disabled={isLoading}
-                            onClick={() => handleBulkAction("SUSPEND")}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
                         >
-                            {isLoading ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                                <UserCog className="mr-2 h-4 w-4" />
-                            )}
-                            Suspend Selected
+                            Next
                         </Button>
-                    )}
-                    <Button
-                        variant="destructive"
-                        disabled={isLoading || selectedRows.length === 0}
-                        onClick={() => {
-                            const selectedIds = selectedRows.map(
-                                (row) => row.original.id
-                            );
-                            handleDeleteUsers(selectedIds);
-                        }}
-                    >
-                        {isLoading ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Trash2 className="mr-2 h-4 w-4" />
-                        )}
-                        Delete Selected
-                    </Button>
-                </div>
-            </div>
-
-            <div className="flex items-center py-4">
-                <Input
-                    placeholder="Filter names..."
-                    value={
-                        (table.getColumn("name")?.getFilterValue() as string) ??
-                        ""
-                    }
-                    onChange={(event) =>
-                        table
-                            .getColumn("name")
-                            ?.setFilterValue(event.target.value)
-                    }
-                    className="max-w-sm"
-                />
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="ml-auto">
-                            Columns
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        {table
-                            .getAllColumns()
-                            .filter((column) => column.getCanHide())
-                            .map((column) => {
-                                return (
-                                    <DropdownMenuCheckboxItem
-                                        key={column.id}
-                                        className="capitalize"
-                                        checked={column.getIsVisible()}
-                                        onCheckedChange={(value) =>
-                                            column.toggleVisibility(!!value)
-                                        }
-                                    >
-                                        {column.id}
-                                    </DropdownMenuCheckboxItem>
-                                );
-                            })}
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-
-            <div className="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => {
-                                    return (
-                                        <TableHead key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                      header.column.columnDef
-                                                          .header,
-                                                      header.getContext()
-                                                  )}
-                                        </TableHead>
-                                    );
-                                })}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
-                    <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={
-                                        row.getIsSelected() && "selected"
-                                    }
-                                >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={columns.length}
-                                    className="h-24 text-center"
-                                >
-                                    No results.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-
-            <div className="flex items-center justify-end space-x-2 py-4">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => table.previousPage()}
-                    disabled={!table.getCanPreviousPage()}
-                >
-                    Previous
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => table.nextPage()}
-                    disabled={!table.getCanNextPage()}
-                >
-                    Next
-                </Button>
-            </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 }
