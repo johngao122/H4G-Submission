@@ -16,7 +16,9 @@ public class ProductRequest {
     private @Getter String userId;
     private @Getter String productName;
     private @Getter String productDescription;
-    private @Getter LocalDateTime createdOn;
+    private @Getter LocalDateTime createdOn = LocalDateTime.now();
+
+    public ProductRequest() {}
 
     public ProductRequest(String requestId, String userId, String productName, String productDescription,
             LocalDateTime createdOn) {
@@ -31,7 +33,6 @@ public class ProductRequest {
         this.userId = userId;
         this.productName = productName;
         this.productDescription = productDescription;
-        this.createdOn = LocalDateTime.now();
     }
 
     @Override

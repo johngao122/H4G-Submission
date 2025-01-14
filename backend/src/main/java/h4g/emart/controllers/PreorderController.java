@@ -71,7 +71,7 @@ public class PreorderController {
     
     // 6. Update Preorder Status
     @PatchMapping("/{preorderId}/status")
-    public ResponseEntity<Preorder> updatePreorderStatus(@PathVariable String preorderId, @RequestBody String status) {
+    public ResponseEntity<Preorder> updatePreorderStatus(@PathVariable String preorderId, @RequestParam("status") String status) {
         Preorder preorder = preorderService.updatePreorderStatus(preorderId, status);
         try {
             if (preorder != null) {

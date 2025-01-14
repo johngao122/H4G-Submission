@@ -7,7 +7,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
+
+class BalanceRequest {
+    private @Getter @Setter double amount;
+}
 
 @RestController
 @RequestMapping("/users")
@@ -101,8 +108,8 @@ public class UserController {
      * NOTE: Should only be accessible by admin to forcibly inject/extract from a user's balance
      */
     @PostMapping("/{userId}/addBalance")
-    public ResponseEntity<User> addBalance(@PathVariable String userId, @RequestBody double amount) {
-        User user = userService.addBalance(userId, amount);
+    public ResponseEntity<User> addBalance(@PathVariable String userId, @RequestBody BalanceRequest amount) {
+        User user = userService.addBalance(userId, amount.getAmount());
         if (user != null) {
             return new ResponseEntity<>(user, HttpStatus.OK);
         } else {
@@ -120,8 +127,8 @@ public class UserController {
      * NOTE: Should only be accessible by admin to forcibly inject/extract from a user's balance
      */
     @PostMapping("/{userId}/deductBalance")
-    public ResponseEntity<User> deductBalance(@PathVariable String userId, @RequestBody double amount) {
-        User user = userService.deductBalance(userId, amount);
+    public ResponseEntity<User> deductBalance(@PathVariable String userId, @RequestBody BalanceRequest amount) {
+        User user = userService.deductBalance(userId, amount.getAmount());
         if (user != null) {
             return new ResponseEntity<>(user, HttpStatus.OK);
         } else {
@@ -138,7 +145,7 @@ public class UserController {
      *         or HTTP status 404 (Not Found) if the user does not exist.
      */
     @PatchMapping("/{userId}/status")
-    public ResponseEntity<User> changeUserStatus(@PathVariable String userId, @RequestBody String userStatus) {
+    public ResponseEntity<User> changeUserStatus(@PathVariable String userId, @RequestParam("status") String userStatus) {
         User user = userService.changeUserStatus(userId, userStatus);
         if (user != null) {
             return new ResponseEntity<>(user, HttpStatus.OK);

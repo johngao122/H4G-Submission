@@ -17,7 +17,9 @@ public class Transaction {
     private @Getter String productId;
     private @Getter int qtyPurchased;
     private @Getter @Setter double totalPrice;
-    private @Getter LocalDateTime datetime;
+    private @Getter LocalDateTime datetime = LocalDateTime.now();;
+
+    public Transaction() {}
 
     public Transaction(String transactionId, String userId, String productId, int qtyPurchased, double totalPrice) {
         this.transactionId = transactionId;
@@ -32,7 +34,6 @@ public class Transaction {
         this.userId = userId;
         this.productId = productId;
         this.qtyPurchased = qtyPurchased;
-        this.datetime = LocalDateTime.now();
     }
 
     @Override

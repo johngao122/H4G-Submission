@@ -20,9 +20,9 @@ public class Preorder {
     private @Getter String productId;
     private @Getter @Setter int qtyPreordered;
     private @Getter @Setter double totalPrice;
-    private @Getter @Setter LocalDateTime datetime;
+    private @Getter @Setter LocalDateTime datetime = LocalDateTime.now();
     @JsonProperty("status")
-    private @Getter @Setter PreorderStatus status;
+    private @Getter @Setter PreorderStatus status = PreorderStatus.PENDING;
 
     public Preorder() {}
     
@@ -41,8 +41,6 @@ public class Preorder {
         this.userId = userId;
         this.productId = productId;
         this.qtyPreordered = qtyPreordered;
-        this.status = PreorderStatus.PENDING;
-        this.datetime = LocalDateTime.now();
     }
 
     @Override
