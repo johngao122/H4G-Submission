@@ -85,22 +85,30 @@ export default function ResidentDashboard() {
                         <QuickAction
                             icon={ShoppingBag}
                             title="Shop"
-                            onClick={() => router.push("/resident/shop")}
+                            onClick={() =>
+                                router.push("/resident/dashboard/shop")
+                            }
                         />
                         <QuickAction
                             icon={ClipboardList}
                             title="Request Items"
-                            onClick={() => router.push("/resident/request")}
+                            onClick={() =>
+                                router.push("/resident/dashboard/request")
+                            }
                         />
                         <QuickAction
                             icon={History}
                             title="Transaction History"
-                            onClick={() => router.push("/resident/history")}
+                            onClick={() =>
+                                router.push("/resident/dashboard/history")
+                            }
                         />
                         <QuickAction
                             icon={CheckSquare}
                             title="Tasks"
-                            onClick={() => router.push("/resident/tasks")}
+                            onClick={() =>
+                                router.push("/resident/dashboard/tasks")
+                            }
                         />
                     </div>
                 </div>

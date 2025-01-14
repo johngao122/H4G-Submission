@@ -11,10 +11,10 @@ import { UserButton } from "@clerk/nextjs";
 
 const TopBarAdmin = () => {
     const navigationItems = [
-        { name: "Tasks", href: "/admin/tasks" },
-        { name: "User Accounts", href: "/admin/users" },
-        { name: "Inventory", href: "/admin/inventory" },
-        { name: "Reports", href: "/admin/reports" },
+        { name: "Tasks", href: "/admin/dashboard/tasks" },
+        { name: "User Accounts", href: "/admin/dashboard/users" },
+        { name: "Inventory", href: "/admin/dashboard/inventory" },
+        { name: "Reports", href: "/admin/dashboard/reports" },
     ];
 
     return (

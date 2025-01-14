@@ -12,6 +12,7 @@ const isPublicRoute = createRouteMatcher([
     "/admin/forgot-password",
     "/resident/login",
     "/resident/forgot-password",
+    "/suspended-account",
     "/api/webhooks(.*)",
 ]);
 

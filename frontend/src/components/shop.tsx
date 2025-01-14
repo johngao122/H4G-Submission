@@ -100,7 +100,7 @@ const Shop: React.FC = () => {
                     />
                 </div>
                 <Button
-                    onClick={() => router.push("/resident/shop/cart")}
+                    onClick={() => router.push("/resident/dashboard/shop/cart")}
                     className="ml-4 relative"
                 >
                     <ShoppingCart className="h-5 w-5" />

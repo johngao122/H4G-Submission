@@ -13,7 +13,7 @@ const ShopPage = () => {
             <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200">
                 <div className="container mx-auto px-4 py-3">
                     <Link
-                        href="/resident/request"
+                        href="/resident/dashboard/request"
                         className="flex items-center justify-center text-sm text-blue-600 hover:text-blue-800 font-medium"
                     >
                         Want to request an item? Click here

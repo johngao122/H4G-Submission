@@ -11,10 +11,10 @@ import { UserButton } from "@clerk/nextjs";
 
 const TopBar = () => {
     const navigationItems = [
-        { name: "Shop", href: "/resident/shop" },
-        { name: "Tasks", href: "/resident/tasks" },
-        { name: "Transaction History", href: "/resident/history" },
-        { name: "Request Items", href: "/resident/request" },
+        { name: "Shop", href: "/resident/dashboard/shop" },
+        { name: "Tasks", href: "/resident/dashboard/tasks" },
+        { name: "Transaction History", href: "/resident/dashboard/history" },
+        { name: "Request Items", href: "/resident/dashboard/request" },
     ];
 
     return (

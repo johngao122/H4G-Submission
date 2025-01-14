@@ -15,14 +15,6 @@ export default function Page() {
                         },
                     }}
                 />
-                <div className="mt-4 ">
-                    <Link
-                        href="/admin/forgotPassword"
-                        className="text-sm text-indigo-600 hover:text-indigo-500"
-                    >
-                        Forgot your password? Reset it here
-                    </Link>
-                </div>
             </div>
         </div>
     );

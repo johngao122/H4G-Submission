@@ -105,22 +105,30 @@ const AdminDashboard = () => {
                         <QuickAction
                             icon={Package}
                             title="Inventory"
-                            onClick={() => router.push("/admin/inventory")}
+                            onClick={() =>
+                                router.push("/admin/dashboard/inventory")
+                            }
                         />
                         <QuickAction
                             icon={Users}
                             title="User Accounts"
-                            onClick={() => router.push("/admin/users")}
+                            onClick={() =>
+                                router.push("/admin/dashboard/users")
+                            }
                         />
                         <QuickAction
                             icon={ClipboardList}
                             title="Manage Tasks"
-                            onClick={() => router.push("/admin/tasks")}
+                            onClick={() =>
+                                router.push("/admin/dashboard/tasks")
+                            }
                         />
                         <QuickAction
                             icon={BarChart3}
                             title="Reports"
-                            onClick={() => router.push("/admin/reports")}
+                            onClick={() =>
+                                router.push("/admin/dashboard/reports")
+                            }
                         />
                     </div>
                 </div>
