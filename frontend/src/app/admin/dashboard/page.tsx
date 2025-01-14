@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import QuickAction from "@/components/quickAction";
 import TopBarAdmin from "@/components/topbarAdmin";
@@ -7,7 +7,7 @@ import { Package, Users, ClipboardList, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useRoleCheck } from "@/hooks/useRoleCheck";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 const SAMPLE_INVENTORY_ALERTS = [
     //Replace with API implementation
@@ -58,17 +58,17 @@ const SAMPLE_RECENT_ACTIVITIES = [
 ];
 
 const AdminDashboard = () => {
-    //const { isLoading } = useRoleCheck("admin");
-    /*
-    if (isLoading) {
-        return <div>Loading...</div>;
-    }
-    */
-
     const router = useRouter();
     const { isSignedIn, user, isLoaded } = useUser();
+    const { isAuthorized, isChecking, AccessDenied } = useAdminAuth();
 
-    if (!isLoaded) {
+    useEffect(() => {
+        if (isLoaded && !user) {
+            router.push("/admin/login");
+        }
+    }, [isLoaded, user, router]);
+
+    if (!isLoaded || isChecking) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <p>Loading...</p>
@@ -77,11 +77,11 @@ const AdminDashboard = () => {
     }
 
     if (!user) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p>Please sign in to access the admin dashboard</p>
-            </div>
-        );
+        return null;
+    }
+
+    if (!isAuthorized) {
+        return <AccessDenied />;
     }
 
     return (

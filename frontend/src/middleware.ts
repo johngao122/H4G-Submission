@@ -12,16 +12,23 @@ const isPublicRoute = createRouteMatcher([
     "/admin/forgot-password",
     "/resident/login",
     "/resident/forgot-password",
+    "/api/webhooks(.*)",
 ]);
 
+const isSignUpRoute = createRouteMatcher(["/resident/signup", "/admin/signup"]);
+const isAdminRoute = createRouteMatcher(["/admin/(.*)"]);
+const isResidentRoute = createRouteMatcher(["/resident/(.*)"]);
+
 export default clerkMiddleware((auth, req) => {
-    if (isPublicRoute(req)) {
+    if (isPublicRoute(req) || isSignUpRoute(req)) {
         return NextResponse.next();
     }
 
     if (isProtectedRoute(req)) {
         auth.protect();
     }
+
+    return NextResponse.next();
 });
 
 export const config = {
