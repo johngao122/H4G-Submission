@@ -27,11 +27,11 @@ public class ProductRequest {
         this.createdOn = createdOn;
     }
 
-    public ProductRequest(String userId, String productName, String productDescription, LocalDateTime createdOn) {
+    public ProductRequest(String userId, String productName, String productDescription) {
         this.userId = userId;
         this.productName = productName;
         this.productDescription = productDescription;
-        this.createdOn = createdOn;
+        this.createdOn = LocalDateTime.now();
     }
 
     @Override
