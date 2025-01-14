@@ -24,7 +24,7 @@ const TopBarAdmin = () => {
                     <div className="flex items-center space-x-8">
                         <div className="flex-shrink-0">
                             <a
-                                href="/resident/dashboard"
+                                href="/admin/dashboard"
                                 className="flex items-center"
                             >
                                 <div className="h-8 w-8 bg-blue-600 rounded-md flex items-center justify-center">
