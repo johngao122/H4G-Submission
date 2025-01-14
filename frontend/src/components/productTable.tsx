@@ -10,6 +10,8 @@ import {
     SortingState,
     useReactTable,
     RowSelectionState,
+    Table as TableType,
+    Row,
 } from "@tanstack/react-table";
 import {
     Table,
@@ -27,10 +29,123 @@ import {
     DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
-import { Plus, Pencil, ArrowUpDown, Trash2 } from "lucide-react";
+import {
+    Plus,
+    Pencil,
+    ArrowUpDown,
+    Trash2,
+    MoreHorizontal,
+} from "lucide-react";
 import { Product, ProductTableProps } from "@/app/types/shop";
 import Link from "next/link";
 import { Checkbox } from "./ui/checkbox";
+import { Card, CardContent } from "./ui/card";
+import { Badge } from "./ui/badge";
+
+interface ProductHeaderProps {
+    selectedCount: number;
+    onAddNew: () => void;
+    onDeleteSelected: () => void;
+}
+
+interface MobileProductViewProps {
+    table: TableType<Product>;
+    onEdit: (id: string) => void;
+}
+
+const ProductHeader: React.FC<ProductHeaderProps> = ({
+    selectedCount,
+    onAddNew,
+    onDeleteSelected,
+}) => {
+    return (
+        <div className="flex flex-col space-y-2 sm:flex-row sm:justify-between sm:items-center">
+            <h2 className="text-2xl font-bold">Product Inventory</h2>
+            <div className="flex flex-wrap gap-2">
+                {selectedCount > 0 && (
+                    <Button
+                        variant="destructive"
+                        onClick={onDeleteSelected}
+                        className="w-full sm:w-auto"
+                    >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Selected ({selectedCount})
+                    </Button>
+                )}
+                <Button onClick={onAddNew} className="w-full sm:w-auto">
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Item
+                </Button>
+            </div>
+        </div>
+    );
+};
+
+const MobileProductView: React.FC<MobileProductViewProps> = ({
+    table,
+    onEdit,
+}) => {
+    return (
+        <div className="space-y-4 md:hidden">
+            {table.getRowModel().rows.map((row: Row<Product>) => (
+                <Card key={row.id}>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    checked={row.getIsSelected()}
+                                    onCheckedChange={(value) =>
+                                        row.toggleSelected(!!value)
+                                    }
+                                    aria-label="Select row"
+                                />
+                                <div>
+                                    <Link
+                                        href={`/admin/dashboard/inventory/${row.original.id}`}
+                                        className="font-medium text-blue-600 hover:underline"
+                                    >
+                                        {row.getValue("name")}
+                                    </Link>
+                                    <p className="text-sm text-gray-500">
+                                        ID: {row.getValue("id")}
+                                    </p>
+                                </div>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                onClick={() => onEdit(row.original.id)}
+                                className="p-0 h-8 w-8"
+                            >
+                                <Pencil className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">Category:</span>
+                                <span>{row.getValue("Category")}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">Price:</span>
+                                <span className="font-medium">
+                                    $
+                                    {(row.getValue("price") as number).toFixed(
+                                        2
+                                    )}
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">Quantity:</span>
+                                <span className="font-medium">
+                                    {row.getValue("quantity")}
+                                </span>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    );
+};
 
 const ProductTable: React.FC<ProductTableProps> = ({
     products,
@@ -231,31 +346,13 @@ const ProductTable: React.FC<ProductTableProps> = ({
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Product Inventory</h2>
-                <div className="flex gap-2">
-                    {Object.keys(rowSelection).length > 0 && (
-                        <Button
-                            variant="destructive"
-                            onClick={handleDeleteSelected}
-                            className="flex items-center"
-                        >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete Selected
-                        </Button>
-                    )}
-                    <Button
-                        onClick={() =>
-                            router.push("/admin/dashboard/inventory/new")
-                        }
-                    >
-                        <Plus className="mr-2 h-4 w-4" />
-                        New Item
-                    </Button>
-                </div>
-            </div>
+            <ProductHeader
+                selectedCount={Object.keys(rowSelection).length}
+                onAddNew={() => router.push("/admin/dashboard/inventory/new")}
+                onDeleteSelected={handleDeleteSelected}
+            />
 
-            <div className="rounded-md border">
+            <div className="hidden md:block rounded-md border">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -301,6 +398,13 @@ const ProductTable: React.FC<ProductTableProps> = ({
                     </TableBody>
                 </Table>
             </div>
+
+            <MobileProductView
+                table={table}
+                onEdit={(id) =>
+                    router.push(`/admin/dashboard/inventory/${id}/edit`)
+                }
+            />
         </div>
     );
 };

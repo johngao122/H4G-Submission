@@ -27,6 +27,10 @@ import {
     getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
+    Table as TableType,
+    Column,
+    HeaderGroup,
+    Row,
 } from "@tanstack/react-table";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -40,6 +44,9 @@ import { Checkbox } from "./ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { ArrowUpDown, ChevronDown, ChevronUp } from "lucide-react";
 import type { Task } from "@/app/types/task";
+import { Card, CardContent } from "./ui/card";
+import { Badge } from "./ui/badge";
+import { ChangeEvent } from "react";
 
 const SAMPLE_TASKS: Task[] = [
     {
@@ -68,6 +75,18 @@ const SAMPLE_TASKS: Task[] = [
     },
 ];
 
+interface TableViewProps {
+    table: TableType<Task>;
+}
+
+interface ResponsiveHeaderProps {
+    table: TableType<Task>;
+}
+interface MobileCardViewProps {
+    table: TableType<Task>;
+    onTaskClick: (task: Task) => void;
+}
+
 const TaskTableAdmin = () => {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -78,11 +97,6 @@ const TaskTableAdmin = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-    {
-        /* Previous imports remain the same */
-    }
-
-    // In your columns definition, update the header and cell styling:
     const columns: ColumnDef<Task>[] = [
         {
             id: "select",
@@ -249,7 +263,7 @@ const TaskTableAdmin = () => {
     const handleApproveSelected = () => {
         const selectedRows = table.getFilteredSelectedRowModel().rows;
         const selectedTaskIds = selectedRows.map((row) => row.original.id);
-        // Replace with API
+
         console.log("Approving tasks:", selectedTaskIds);
         table.resetRowSelection();
     };
@@ -257,18 +271,75 @@ const TaskTableAdmin = () => {
     const handleRejectSelected = () => {
         const selectedRows = table.getFilteredSelectedRowModel().rows;
         const selectedTaskIds = selectedRows.map((row) => row.original.id);
-        // Replace with API
+
         console.log("Rejecting tasks:", selectedTaskIds);
         table.resetRowSelection();
     };
 
-    return (
-        <div className="container mx-auto py-8">
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h1 className="text-2xl font-bold mb-4">
-                        Vet Pending Tasks
-                    </h1>
+    const MobileCardView: React.FC<MobileCardViewProps> = ({
+        table,
+        onTaskClick,
+    }) => {
+        return (
+            <div className="space-y-4 md:hidden">
+                {table.getRowModel().rows.map((row: Row<Task>) => (
+                    <Card
+                        key={row.id}
+                        className="cursor-pointer hover:bg-gray-50"
+                        onClick={() => onTaskClick(row.original)}
+                    >
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        checked={row.getIsSelected()}
+                                        onCheckedChange={(value) =>
+                                            row.toggleSelected(!!value)
+                                        }
+                                        onClick={(e) => e.stopPropagation()}
+                                        aria-label="Select row"
+                                    />
+                                    <div>
+                                        <p className="font-medium">
+                                            {row.original.contributors[0].name}
+                                        </p>
+                                        <p className="text-sm text-gray-500">
+                                            {row.getValue("name")}
+                                        </p>
+                                    </div>
+                                </div>
+                                <Badge
+                                    variant={
+                                        row.original.status === "CLOSED"
+                                            ? "secondary"
+                                            : "default"
+                                    }
+                                >
+                                    {row.original.status}
+                                </Badge>
+                            </div>
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-gray-500">Reward:</span>
+                                <span className="font-medium">
+                                    ${row.original.reward}
+                                </span>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        );
+    };
+
+    const ResponsiveHeader: React.FC<ResponsiveHeaderProps> = ({ table }) => {
+        const handleFilterChange = (event: ChangeEvent<HTMLInputElement>) => {
+            table.getColumn("name")?.setFilterValue(event.target.value);
+        };
+
+        return (
+            <div className="flex flex-col space-y-4 mb-6 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
+                <div className="flex flex-col space-y-4 sm:space-y-2">
+                    <h1 className="text-2xl font-bold">Vet Pending Tasks</h1>
                     <Input
                         placeholder="Filter tasks..."
                         value={
@@ -276,24 +347,27 @@ const TaskTableAdmin = () => {
                                 .getColumn("name")
                                 ?.getFilterValue() as string) ?? ""
                         }
-                        onChange={(event) =>
-                            table
-                                .getColumn("name")
-                                ?.setFilterValue(event.target.value)
-                        }
+                        onChange={handleFilterChange}
                         className="max-w-sm"
                     />
                 </div>
-                <div className="flex items-center space-x-4">
+                <div className="flex flex-wrap gap-2 sm:gap-4">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline">Columns</Button>
+                            <Button
+                                variant="outline"
+                                className="w-full sm:w-auto"
+                            >
+                                Columns
+                            </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             {table
                                 .getAllColumns()
-                                .filter((column) => column.getCanHide())
-                                .map((column) => {
+                                .filter((column: Column<Task>) =>
+                                    column.getCanHide()
+                                )
+                                .map((column: Column<Task>) => {
                                     return (
                                         <DropdownMenuCheckboxItem
                                             key={column.id}
@@ -315,7 +389,7 @@ const TaskTableAdmin = () => {
                             table.getFilteredSelectedRowModel().rows.length ===
                             0
                         }
-                        className="bg-green-100 text-green-700 hover:bg-green-200"
+                        className="bg-green-100 text-green-700 hover:bg-green-200 w-full sm:w-auto"
                     >
                         Approve Selected
                     </Button>
@@ -326,34 +400,41 @@ const TaskTableAdmin = () => {
                             0
                         }
                         variant="destructive"
+                        className="w-full sm:w-auto"
                     >
                         Reject Selected
                     </Button>
                 </div>
             </div>
+        );
+    };
 
-            <div className="border rounded-lg">
+    const DesktopTableView: React.FC<TableViewProps> = ({ table }) => {
+        return (
+            <div className="hidden md:block border rounded-lg">
                 <Table>
                     <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => (
-                                    <TableHead key={header.id}>
-                                        {header.isPlaceholder
-                                            ? null
-                                            : flexRender(
-                                                  header.column.columnDef
-                                                      .header,
-                                                  header.getContext()
-                                              )}
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        ))}
+                        {table
+                            .getHeaderGroups()
+                            .map((headerGroup: HeaderGroup<Task>) => (
+                                <TableRow key={headerGroup.id}>
+                                    {headerGroup.headers.map((header) => (
+                                        <TableHead key={header.id}>
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                      header.column.columnDef
+                                                          .header,
+                                                      header.getContext()
+                                                  )}
+                                        </TableHead>
+                                    ))}
+                                </TableRow>
+                            ))}
                     </TableHeader>
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
+                            table.getRowModel().rows.map((row: Row<Task>) => (
                                 <TableRow
                                     key={row.id}
                                     data-state={
@@ -377,7 +458,7 @@ const TaskTableAdmin = () => {
                         ) : (
                             <TableRow>
                                 <TableCell
-                                    colSpan={columns.length}
+                                    colSpan={table.getAllColumns().length}
                                     className="h-24 text-center"
                                 >
                                     No results.
@@ -387,6 +468,14 @@ const TaskTableAdmin = () => {
                     </TableBody>
                 </Table>
             </div>
+        );
+    };
+
+    return (
+        <div className="container mx-auto p-4">
+            <ResponsiveHeader table={table} />
+            <DesktopTableView table={table} />
+            <MobileCardView table={table} onTaskClick={handleTaskClick} />
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent>
