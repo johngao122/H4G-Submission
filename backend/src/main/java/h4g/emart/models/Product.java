@@ -2,6 +2,7 @@ package h4g.emart.models;
 
 import java.util.Arrays;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Getter;
@@ -10,6 +11,7 @@ import lombok.Setter;
 @Document(collection = "Product")
 
 public class Product {
+    @Id
     private @Getter @Setter String productId;
     private @Getter @Setter String name;
     private @Getter @Setter String category;

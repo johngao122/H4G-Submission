@@ -22,7 +22,11 @@ public class PreorderController {
     @PostMapping
     public ResponseEntity<Preorder> createPreorder(@RequestBody Preorder preorder) {
         Preorder createdPreorder = preorderService.createPreorder(preorder);
-        return new ResponseEntity<>(createdPreorder, HttpStatus.CREATED);
+        if (preorder != null) {
+            return new ResponseEntity<>(preorder, HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     // 2. Get a Preorder by ID (Read)

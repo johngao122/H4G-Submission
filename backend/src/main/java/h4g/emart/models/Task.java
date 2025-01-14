@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Getter;
@@ -12,6 +13,7 @@ import lombok.Setter;
 @Document(collection = "Task")
 
 public class Task {
+    @Id
     private @Getter @Setter String taskId;
     private @Getter @Setter String taskName;
     private @Getter @Setter String taskDesc;

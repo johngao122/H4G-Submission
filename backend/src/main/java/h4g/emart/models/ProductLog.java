@@ -2,6 +2,7 @@ package h4g.emart.models;
 
 import java.time.LocalDateTime;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Getter;
@@ -9,6 +10,7 @@ import lombok.Getter;
 @Document(collection = "ProductLog")
 
 public class ProductLog {
+    @Id
     private @Getter String logId;
     private @Getter String userId;
     private @Getter String productId;

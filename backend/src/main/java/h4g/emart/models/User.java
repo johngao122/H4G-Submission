@@ -1,5 +1,6 @@
 package h4g.emart.models;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Getter;
@@ -8,6 +9,7 @@ import lombok.Setter;
 @Document(collection = "User")
 
 public class User {
+    @Id
     private @Getter @Setter String userId;
     private @Getter @Setter String name;
     private @Getter @Setter Role role;

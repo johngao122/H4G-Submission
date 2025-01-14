@@ -2,7 +2,10 @@ package h4g.emart.services;
 
 import h4g.emart.models.Preorder;
 import h4g.emart.models.PreorderStatus;
+import h4g.emart.models.Product;
+import h4g.emart.repositories.UserRepository;
 import h4g.emart.repositories.PreorderRepository;
+import h4g.emart.services.ProductService;
 import h4g.emart.services.SequenceGeneratorService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,12 @@ public class PreorderService {
     @Autowired
     private PreorderRepository preorderRepository;
 
+    @Autowired
+    private ProductService productService;
+
+    @Autowired
+    private UserRepository userRepository;
+
     /**
      * Creates a new preorder.
      * 
@@ -27,8 +36,13 @@ public class PreorderService {
      * @return The created preorder.
      */
     public Preorder createPreorder(Preorder preorder) {
-        preorder.setPreorderId(SequenceGeneratorService.generateId("Preorder"));
-        return preorderRepository.save(preorder);
+        Product product = productService.getProductById(preorder.getProductId());
+        if (userRepository.existsById(preorder.getUserId()) && product != null) {
+            preorder.setPreorderId(SequenceGeneratorService.generateId("Preorder"));
+            preorder.setTotalPrice(product.getPrice() * preorder.getQtyPreordered());
+            return preorderRepository.save(preorder);
+        }
+        return null;
     }
 
     /**
