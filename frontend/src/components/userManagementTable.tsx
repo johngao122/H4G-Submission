@@ -45,8 +45,10 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/app/types/user";
+import { useRouter } from "next/navigation";
 
 export function UserManagementDataTable() {
+    const router = useRouter();
     const { toast } = useToast();
     const [users, setUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -417,6 +419,10 @@ export function UserManagementDataTable() {
         (row) => row.original.status === "ACTIVE"
     );
 
+    const handleAddUser = () => {
+        router.push("/admin/users/add");
+    };
+
     return (
         <div className="container mx-auto py-10">
             <div className="flex justify-between items-center mb-6">
@@ -429,7 +435,7 @@ export function UserManagementDataTable() {
                     </p>
                 </div>
                 <div className="space-x-2">
-                    <Button disabled={isLoading}>
+                    <Button disabled={isLoading} onClick={handleAddUser}>
                         <Plus className="mr-2 h-4 w-4" />
                         Add User
                     </Button>
