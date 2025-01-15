@@ -29,7 +29,8 @@ public class User {
         this.status = userStatus;
     }
 
-    public User(String name, Role role, double voucherBal) {
+    public User(String userId, String name, Role role, double voucherBal) {
+        this.userId = userId;
         this.name = name;
         this.role = role;
         this.voucherBal = voucherBal;
