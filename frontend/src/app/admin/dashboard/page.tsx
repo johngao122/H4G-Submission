@@ -104,23 +104,23 @@ const AdminDashboard = () => {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <QuickAction
                             icon={Package}
-                            title="Inventory"
+                            title="Add new product"
                             onClick={() =>
-                                router.push("/admin/dashboard/inventory")
+                                router.push("/admin/dashboard/inventory/new")
                             }
                         />
                         <QuickAction
                             icon={Users}
-                            title="User Accounts"
+                            title="Add new user"
                             onClick={() =>
-                                router.push("/admin/dashboard/users")
+                                router.push("/admin/dashboard/users/createUser")
                             }
                         />
                         <QuickAction
                             icon={ClipboardList}
                             title="Manage Tasks"
                             onClick={() =>
-                                router.push("/admin/dashboard/tasks")
+                                router.push("/admin/dashboard/tasks/createTask")
                             }
                         />
                         <QuickAction

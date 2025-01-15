@@ -1,0 +1,6 @@
+[phases]
+install = "chmod +x ./mvnw && ./mvnw dependency:resolve"
+build = "chmod +x ./mvnw && ./mvnw package -DskipTests"
+
+[environment]
+JDK_VERSION = "21"

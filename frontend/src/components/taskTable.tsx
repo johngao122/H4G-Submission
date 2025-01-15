@@ -47,6 +47,7 @@ import type { Task } from "@/app/types/task";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
 
 const SAMPLE_TASKS: Task[] = [
     {
@@ -332,6 +333,7 @@ const TaskTableAdmin = () => {
     };
 
     const ResponsiveHeader: React.FC<ResponsiveHeaderProps> = ({ table }) => {
+        const router = useRouter();
         const handleFilterChange = (event: ChangeEvent<HTMLInputElement>) => {
             table.getColumn("name")?.setFilterValue(event.target.value);
         };
@@ -339,7 +341,19 @@ const TaskTableAdmin = () => {
         return (
             <div className="flex flex-col space-y-4 mb-6 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
                 <div className="flex flex-col space-y-4 sm:space-y-2">
-                    <h1 className="text-2xl font-bold">Vet Pending Tasks</h1>
+                    <div className="flex items-center justify-between sm:justify-start sm:space-x-4">
+                        <h1 className="text-2xl font-bold">
+                            Vet Pending Tasks
+                        </h1>
+                        <Button
+                            onClick={() =>
+                                router.push("/admin/dashboard/tasks/createTask")
+                            }
+                            className="bg-blue-600 text-white hover:bg-blue-700"
+                        >
+                            Create Task
+                        </Button>
+                    </div>
                     <Input
                         placeholder="Filter tasks..."
                         value={

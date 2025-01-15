@@ -119,8 +119,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onAccept }) => {
                                     </div>
                                 </div>
                                 <DialogFooter>
-                                    <Button onClick={handleAcceptTask}>
-                                        Accept Task
+                                    <Button
+                                        className="bg-green-700"
+                                        onClick={handleAcceptTask}
+                                    >
+                                        Join Task
                                     </Button>
                                 </DialogFooter>
                             </DialogContent>

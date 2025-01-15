@@ -22,12 +22,15 @@ import {
     TableRow,
 } from "./ui/table";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "./ui/button";
 import {
     Plus,
@@ -45,7 +48,8 @@ import { Badge } from "./ui/badge";
 interface ProductHeaderProps {
     selectedCount: number;
     onAddNew: () => void;
-    onDeleteSelected: () => void;
+    onOpenDeleteDialog: (productIds: string[]) => void;
+    selectedProductIds: string[];
 }
 
 interface MobileProductViewProps {
@@ -53,10 +57,55 @@ interface MobileProductViewProps {
     onEdit: (id: string) => void;
 }
 
+interface DeleteProductDialogProps {
+    isOpen: boolean;
+    onConfirm: () => void;
+    onCancel: () => void;
+    productCount: number;
+}
+
+const DeleteProductDialog: React.FC<DeleteProductDialogProps> = ({
+    isOpen,
+    onConfirm,
+    onCancel,
+    productCount,
+}) => {
+    return (
+        <AlertDialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>
+                        Delete {productCount > 1 ? "Products" : "Product"}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Are you sure you want to delete{" "}
+                        {productCount === 1
+                            ? "this product"
+                            : `these ${productCount} products`}
+                        ? This action cannot be undone.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={onCancel}>
+                        Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={onConfirm}
+                        className="bg-red-600 hover:bg-red-700"
+                    >
+                        Delete
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
+};
+
 const ProductHeader: React.FC<ProductHeaderProps> = ({
     selectedCount,
     onAddNew,
-    onDeleteSelected,
+    onOpenDeleteDialog,
+    selectedProductIds,
 }) => {
     return (
         <div className="flex flex-col space-y-2 sm:flex-row sm:justify-between sm:items-center">
@@ -65,7 +114,7 @@ const ProductHeader: React.FC<ProductHeaderProps> = ({
                 {selectedCount > 0 && (
                     <Button
                         variant="destructive"
-                        onClick={onDeleteSelected}
+                        onClick={() => onOpenDeleteDialog(selectedProductIds)}
                         className="w-full sm:w-auto"
                     >
                         <Trash2 className="mr-2 h-4 w-4" />
@@ -157,6 +206,30 @@ const ProductTable: React.FC<ProductTableProps> = ({
     const [rowSelection, setRowSelection] = React.useState<RowSelectionState>(
         {}
     );
+    const [deleteDialogState, setDeleteDialogState] = React.useState<{
+        isOpen: boolean;
+        productIds: string[];
+    }>({
+        isOpen: false,
+        productIds: [],
+    });
+
+    const handleDeleteDialogOpen = (productIds: string[]) => {
+        setDeleteDialogState({
+            isOpen: true,
+            productIds,
+        });
+    };
+
+    const handleDeleteDialogClose = () => {
+        setDeleteDialogState((prev) => ({ ...prev, isOpen: false }));
+    };
+
+    const handleDeleteConfirm = () => {
+        deleteDialogState.productIds.forEach(onDeleteProduct);
+        setRowSelection({});
+        handleDeleteDialogClose();
+    };
 
     const columns: ColumnDef<Product>[] = [
         {
@@ -336,20 +409,24 @@ const ProductTable: React.FC<ProductTableProps> = ({
         },
     });
 
-    const handleDeleteSelected = () => {
-        const selectedIds = Object.keys(rowSelection).map(
-            (index) => products[parseInt(index)].id
-        );
-        selectedIds.forEach(onDeleteProduct);
-        setRowSelection({});
-    };
+    const selectedProductIds = Object.keys(rowSelection).map(
+        (index) => products[parseInt(index)].id
+    );
 
     return (
         <div className="space-y-4">
+            <DeleteProductDialog
+                isOpen={deleteDialogState.isOpen}
+                onConfirm={handleDeleteConfirm}
+                onCancel={handleDeleteDialogClose}
+                productCount={deleteDialogState.productIds.length}
+            />
+
             <ProductHeader
                 selectedCount={Object.keys(rowSelection).length}
                 onAddNew={() => router.push("/admin/dashboard/inventory/new")}
-                onDeleteSelected={handleDeleteSelected}
+                onOpenDeleteDialog={handleDeleteDialogOpen}
+                selectedProductIds={selectedProductIds}
             />
 
             <div className="hidden md:block rounded-md border">

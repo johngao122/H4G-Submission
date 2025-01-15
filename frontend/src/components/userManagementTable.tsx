@@ -46,6 +46,16 @@ import {
     ArrowUpDown,
     Loader2,
 } from "lucide-react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/app/types/user";
 import { useRouter } from "next/navigation";
@@ -55,8 +65,12 @@ interface ResponsiveHeaderProps {
     selectedRows: Row<User>[];
     isLoading: boolean;
     onAddUser: () => void;
-    onBulkAction: (action: string) => void;
-    onDeleteUsers: (userIds: string[]) => void;
+    onOpenSuspendDialog: (
+        userIds: string[],
+        userName: string,
+        action: "SUSPEND" | "ACTIVATE"
+    ) => void;
+    onOpenDeleteDialog: (userIds: string[]) => void;
 }
 
 interface MobileCardViewProps {
@@ -65,13 +79,104 @@ interface MobileCardViewProps {
     onUpdateUser: (userId: string, action: string, data?: any) => Promise<void>;
 }
 
+interface SuspendUserDialogProps {
+    isOpen: boolean;
+    onConfirm: () => void;
+    onCancel: () => void;
+    userName: string;
+    action: "SUSPEND" | "ACTIVATE";
+}
+
+interface DeleteUserDialogProps {
+    isOpen: boolean;
+    onConfirm: () => void;
+    onCancel: () => void;
+    count: number;
+}
+
+const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
+    isOpen,
+    onConfirm,
+    onCancel,
+    count,
+}) => {
+    return (
+        <AlertDialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>
+                        Delete {count === 1 ? "User" : "Users"}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Are you sure you want to delete{" "}
+                        {count === 1 ? "this user" : `${count} users`}? This
+                        action cannot be undone.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={onCancel}>
+                        Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={onConfirm}
+                        className="bg-red-600 hover:bg-red-700"
+                    >
+                        Delete
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
+};
+
+const SuspendUserDialog: React.FC<SuspendUserDialogProps> = ({
+    isOpen,
+    onConfirm,
+    onCancel,
+    userName,
+    action,
+}) => {
+    return (
+        <AlertDialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>
+                        {action === "SUSPEND" ? "Suspend" : "Activate"} User
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Are you sure you want to {action.toLowerCase()}{" "}
+                        {userName}?
+                        {action === "SUSPEND" &&
+                            " This will prevent them from accessing the system until reactivated."}
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={onCancel}>
+                        Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={onConfirm}
+                        className={
+                            action === "SUSPEND"
+                                ? "bg-red-600 hover:bg-red-700"
+                                : ""
+                        }
+                    >
+                        {action === "SUSPEND" ? "Suspend" : "Activate"}
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
+};
+
 const ResponsiveHeader: React.FC<ResponsiveHeaderProps> = ({
     table,
     selectedRows,
     isLoading,
     onAddUser,
-    onBulkAction,
-    onDeleteUsers,
+    onOpenSuspendDialog,
+    onOpenDeleteDialog,
 }) => {
     const hasSelectedSuspendedUsers = selectedRows.some(
         (row) => row.original.status === "SUSPENDED"
@@ -104,7 +209,20 @@ const ResponsiveHeader: React.FC<ResponsiveHeaderProps> = ({
                         <Button
                             variant="outline"
                             disabled={isLoading}
-                            onClick={() => onBulkAction("ACTIVATE")}
+                            onClick={() => {
+                                const selectedUsers = selectedRows.map(
+                                    (row) => row.original.id
+                                );
+                                const userName =
+                                    selectedRows.length === 1
+                                        ? selectedRows[0].original.name
+                                        : `${selectedRows.length} users`;
+                                onOpenSuspendDialog(
+                                    selectedUsers,
+                                    userName,
+                                    "ACTIVATE"
+                                );
+                            }}
                             className="w-full sm:w-auto"
                         >
                             {isLoading ? (
@@ -119,7 +237,20 @@ const ResponsiveHeader: React.FC<ResponsiveHeaderProps> = ({
                         <Button
                             variant="destructive"
                             disabled={isLoading}
-                            onClick={() => onBulkAction("SUSPEND")}
+                            onClick={() => {
+                                const selectedUsers = selectedRows.map(
+                                    (row) => row.original.id
+                                );
+                                const userName =
+                                    selectedRows.length === 1
+                                        ? selectedRows[0].original.name
+                                        : `${selectedRows.length} users`;
+                                onOpenSuspendDialog(
+                                    selectedUsers,
+                                    userName,
+                                    "SUSPEND"
+                                );
+                            }}
                             className="w-full sm:w-auto"
                         >
                             {isLoading ? (
@@ -137,7 +268,7 @@ const ResponsiveHeader: React.FC<ResponsiveHeaderProps> = ({
                             const selectedIds = selectedRows.map(
                                 (row) => row.original.id
                             );
-                            onDeleteUsers(selectedIds);
+                            onOpenDeleteDialog(selectedIds);
                         }}
                         className="w-full sm:w-auto"
                     >
@@ -257,26 +388,6 @@ const MobileCardView: React.FC<MobileCardViewProps> = ({
                                     >
                                         Reset Password
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            onUpdateUser(
-                                                row.original.id,
-                                                row.original.status === "ACTIVE"
-                                                    ? "SUSPEND"
-                                                    : "ACTIVATE"
-                                            )
-                                        }
-                                        disabled={isLoading}
-                                        className={
-                                            row.original.status === "ACTIVE"
-                                                ? "text-red-600"
-                                                : "text-green-600"
-                                        }
-                                    >
-                                        {row.original.status === "ACTIVE"
-                                            ? "Suspend User"
-                                            : "Unsuspend User"}
-                                    </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
@@ -336,6 +447,24 @@ const MobileCardView: React.FC<MobileCardViewProps> = ({
 export function UserManagementDataTable() {
     const router = useRouter();
     const { toast } = useToast();
+    const [suspendDialogState, setSuspendDialogState] = useState<{
+        isOpen: boolean;
+        userIds: string[];
+        userName: string;
+        action: "SUSPEND" | "ACTIVATE";
+    }>({
+        isOpen: false,
+        userIds: [],
+        userName: "",
+        action: "SUSPEND",
+    });
+    const [deleteDialogState, setDeleteDialogState] = useState<{
+        isOpen: boolean;
+        userIds: string[];
+    }>({
+        isOpen: false,
+        userIds: [],
+    });
     const [users, setUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [sorting, setSorting] = useState<SortingState>([]);
@@ -344,6 +473,34 @@ export function UserManagementDataTable() {
         {}
     );
     const [rowSelection, setRowSelection] = useState({});
+
+    const handleSuspendDialogOpen = (
+        userIds: string[],
+        userName: string,
+        action: "SUSPEND" | "ACTIVATE"
+    ) => {
+        setSuspendDialogState({
+            isOpen: true,
+            userIds,
+            userName,
+            action,
+        });
+    };
+
+    const handleDeleteDialogOpen = (userIds: string[]) => {
+        setDeleteDialogState({
+            isOpen: true,
+            userIds,
+        });
+    };
+
+    const handleSuspendDialogClose = () => {
+        setSuspendDialogState((prev) => ({ ...prev, isOpen: false }));
+    };
+
+    const handleDeleteDialogClose = () => {
+        setDeleteDialogState((prev) => ({ ...prev, isOpen: false }));
+    };
 
     const fetchUsers = async () => {
         try {
@@ -642,26 +799,6 @@ export function UserManagementDataTable() {
                                 >
                                     Reset Password
                                 </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() =>
-                                        handleUpdateUser(
-                                            user.id,
-                                            user.status === "ACTIVE"
-                                                ? "SUSPEND"
-                                                : "ACTIVATE"
-                                        )
-                                    }
-                                    disabled={isLoading}
-                                    className={
-                                        user.status === "ACTIVE"
-                                            ? "text-red-600"
-                                            : "text-green-600"
-                                    }
-                                >
-                                    {user.status === "ACTIVE"
-                                        ? "Suspend User"
-                                        : "Unsuspend User"}
-                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -711,6 +848,30 @@ export function UserManagementDataTable() {
 
     return (
         <div className="container mx-auto py-10 px-4">
+            <SuspendUserDialog
+                isOpen={suspendDialogState.isOpen}
+                onConfirm={() => {
+                    Promise.all(
+                        suspendDialogState.userIds.map((userId) =>
+                            handleUpdateUser(userId, suspendDialogState.action)
+                        )
+                    );
+                    handleSuspendDialogClose();
+                    setRowSelection({});
+                }}
+                onCancel={handleSuspendDialogClose}
+                userName={suspendDialogState.userName}
+                action={suspendDialogState.action}
+            />
+            <DeleteUserDialog
+                isOpen={deleteDialogState.isOpen}
+                onConfirm={() => {
+                    handleDeleteUsers(deleteDialogState.userIds);
+                    handleDeleteDialogClose();
+                }}
+                onCancel={handleDeleteDialogClose}
+                count={deleteDialogState.userIds.length}
+            />
             {isLoading && users.length === 0 ? (
                 <div className="flex items-center justify-center h-96">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -722,8 +883,8 @@ export function UserManagementDataTable() {
                         selectedRows={table.getFilteredSelectedRowModel().rows}
                         isLoading={isLoading}
                         onAddUser={handleAddUser}
-                        onBulkAction={handleBulkAction}
-                        onDeleteUsers={handleDeleteUsers}
+                        onOpenSuspendDialog={handleSuspendDialogOpen}
+                        onOpenDeleteDialog={handleDeleteDialogOpen}
                     />
 
                     <div className="hidden md:block rounded-md border">

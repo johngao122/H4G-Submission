@@ -23,7 +23,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
-        </dependency>
+        </dependency>   
         <!-- Spring Boot Data REST -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
