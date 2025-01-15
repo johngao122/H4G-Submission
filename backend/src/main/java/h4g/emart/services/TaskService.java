@@ -6,6 +6,7 @@ import h4g.emart.models.User;
 import h4g.emart.repositories.TaskRepository;
 import h4g.emart.services.SequenceGeneratorService;
 import h4g.emart.models.Contributor;
+import h4g.emart.models.ContributorStatus;
 import h4g.emart.models.PreorderStatus;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,7 +93,7 @@ public class TaskService {
         User user = userService.getUserById(contributorId);
         if (optionalTask.isPresent() && user != null) {
             Task task = optionalTask.get();
-            if (!task.getContributors().contains(contributorId)) {
+            if (!task.getContributors().contains(contributorId) && task.getStatus() == TaskStatus.OPEN) {
                 Contributor contributor = new Contributor(taskId, contributorId);
                 task.getContributors().add(contributor);
                 return taskRepository.save(task);
@@ -109,5 +110,50 @@ public class TaskService {
     public List<Task> getTasksByStatus(String status) {
         TaskStatus taskStatus = TaskStatus.valueOf(status.toUpperCase()); // Convert string to enum
         return taskRepository.findByStatus(taskStatus);
+    }
+
+    /**
+     * Process tasks, paying out all ACCEPTED contributors and changing their status to PROCESSED
+     * @param taskId The task to process.
+     * @return The updated task
+     */
+    public Task processTask(String taskId) {
+        Optional<Task> optionalTask = taskRepository.findById(taskId);
+        if (!optionalTask.isPresent()) {
+            return null;
+        }
+    
+        Task task = optionalTask.get();
+        double taskReward = task.getTaskReward();
+    
+        for (Contributor contributor : task.getContributors()) {
+            try {
+                if (contributor.getStatus() == ContributorStatus.APPROVED) {
+                    userService.addBalance(contributor.getUserId(), taskReward);
+                    contributor.setStatus(ContributorStatus.PROCESSED);
+                }
+            } catch (Exception e) {
+                System.err.println("Error processing contributor " + contributor.getUserId() + ": " + e.getMessage());
+            }
+        }
+    
+        return taskRepository.save(task);
+    }
+
+    /**
+     * Closes a task.
+     * @param taskId The task to process.
+     * @return The updated task
+     */
+    public Task closeTask(String taskId) {
+        Optional<Task> optionalTask = taskRepository.findById(taskId);
+        if (!optionalTask.isPresent()) {
+            return null;
+        }
+    
+        Task task = optionalTask.get();
+        task.setStatus(TaskStatus.CLOSED);
+    
+        return taskRepository.save(task);
     }
 }

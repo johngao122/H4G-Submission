@@ -94,7 +94,7 @@ public class TaskController {
 
     // 6. Add a Contributor to a Task
     /**
-     * Adds a contributor to a task.
+     * Adds a contributor to a task. The task must be OPEN.
      * @param taskId The ID of the task to which the contributor will be added.
      * @param contributorId The ID of the contributor to be added.
      * @return A ResponseEntity containing the updated task and HTTP status 200 (OK),
@@ -123,6 +123,42 @@ public class TaskController {
             return new ResponseEntity<>(tasks, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    // 8. Process Task
+    /**
+     * Processes a task and pays all APPROVED contributors
+     * Contributor status is changed to PROCESSED
+     * 
+     * @param taskId the task to process
+     * @return A ResponseEntity containing the updated task and HTTP status 200 (OK),
+     *         or HTTP status 404 (Not Found) if the task does not exist.
+     */
+    @PostMapping("process/{taskId}")
+    public ResponseEntity<Task> processTask(@PathVariable String taskId) {
+        Task task = taskService.processTask(taskId);
+        if (task != null) {
+            return new ResponseEntity<>(task, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    // 9. Close Task
+    /**
+     * Closes a task, preventing additional contributors.
+     * @param taskId the task to close
+     * @return A ResponseEntity containing updated task and HTTP status code 200 (OK),
+     * or HTTP status 404 (Not Found) if the task or contributor does not exist.
+     */
+    @PostMapping("close/{taskId}")
+    public ResponseEntity<Task> closeTask(@PathVariable String taskId) {
+        Task task = taskService.closeTask(taskId);
+        if (task != null) {
+            return new ResponseEntity<>(task, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 }

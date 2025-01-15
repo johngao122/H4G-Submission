@@ -10,5 +10,8 @@ public enum ContributorStatus {
     APPROVED,
 
     @JsonProperty("REJECTED")
-    REJECTED;
+    REJECTED,
+
+    @JsonProperty("PROCESSED")
+    PROCESSED;
 }
