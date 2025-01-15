@@ -96,7 +96,7 @@ public class TaskService {
         if (optionalTask.isPresent() && user != null) {
             Task task = optionalTask.get();
             if (!task.getContributors().contains(contributorId) && task.getStatus() == TaskStatus.OPEN) {
-                Contributor contributor = new Contributor(taskId, contributorId);
+                Contributor contributor = new Contributor(taskId, contributorId, user.getName());
                 task.getContributors().add(contributor);
                 return taskRepository.save(task);
             }
