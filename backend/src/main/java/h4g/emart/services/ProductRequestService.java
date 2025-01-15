@@ -1,12 +1,14 @@
 package h4g.emart.services;
 
 import h4g.emart.models.ProductRequest;
+import h4g.emart.models.ProductRequest;
 import h4g.emart.repositories.ProductRequestRepository;
 import h4g.emart.services.SequenceGeneratorService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,5 +69,9 @@ public class ProductRequestService {
             return true;
         }
         return false;
+    }
+    
+    public List<ProductRequest> getProductRequestsInTimeframe(LocalDateTime start, LocalDateTime end) {
+        return productRequestRepository.findByDatetimeBetween(start, end);
     }
 }

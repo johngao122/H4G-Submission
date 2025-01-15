@@ -1,12 +1,14 @@
 package h4g.emart.controllers;
 
 import h4g.emart.models.Task;
+import h4g.emart.models.Task;
 import h4g.emart.services.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -160,5 +162,28 @@ public class TaskController {
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+    }
+
+    // 10. Get Tasks in Timeframe
+    /**
+     * Retrieves all tasks within a certain timeframe.
+     * @param start The start of the timeframe.
+     * @param end The end of the timeframe.
+     * @return A ResponseEntity containing a list of Tasks and HTTP status 200 (OK),
+     *         or HTTP status 404 (Not Found) if no Tasks are found in the timeframe.
+     */
+    @GetMapping("/timeframe")
+    public ResponseEntity<List<Task>> getTasksInTimeframe(
+            @RequestParam("start") String start,
+            @RequestParam("end") String end) {
+
+        LocalDateTime startTime = LocalDateTime.parse(start);
+        LocalDateTime endTime = LocalDateTime.parse(end);
+
+        List<Task> task = taskService.getTasksInTimeframe(startTime, endTime);
+        if (task.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(task, HttpStatus.OK);
     }
 }

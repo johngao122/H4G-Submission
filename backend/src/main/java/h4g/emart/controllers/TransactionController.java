@@ -1,12 +1,14 @@
 package h4g.emart.controllers;
 
 import h4g.emart.models.Transaction;
+import h4g.emart.models.Transaction;
 import h4g.emart.services.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -68,5 +70,28 @@ public class TransactionController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    // 7. Get Transactions in Timeframe
+    /**
+     * Retrieves all transactions within a certain timeframe.
+     * @param start The start of the timeframe.
+     * @param end The end of the timeframe.
+     * @return A ResponseEntity containing a list of Transactions and HTTP status 200 (OK),
+     *         or HTTP status 404 (Not Found) if no Transactions are found in the timeframe.
+     */
+    @GetMapping("/timeframe")
+    public ResponseEntity<List<Transaction>> getTransactionsInTimeframe(
+            @RequestParam("start") String start,
+            @RequestParam("end") String end) {
+
+        LocalDateTime startTime = LocalDateTime.parse(start);
+        LocalDateTime endTime = LocalDateTime.parse(end);
+
+        List<Transaction> transaction = transactionService.getTransactionsInTimeframe(startTime, endTime);
+        if (transaction.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(transaction, HttpStatus.OK);
     }
 }

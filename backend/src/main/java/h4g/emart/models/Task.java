@@ -19,20 +19,20 @@ public class Task {
     private @Getter @Setter String taskName;
     private @Getter @Setter String taskDesc;
     private @Getter @Setter double taskReward;
-    private @Getter LocalDateTime createdOn = LocalDateTime.now();;
+    private @Getter LocalDateTime datetime = LocalDateTime.now();;
     @JsonProperty("status")
     private @Getter @Setter TaskStatus status = TaskStatus.OPEN;
     private @Getter ArrayList<Contributor> contributors = new ArrayList<Contributor>();
 
     public Task() {}
 
-    public Task(String taskId, String taskName, String taskDesc, double taskReward, LocalDateTime createdOn,
+    public Task(String taskId, String taskName, String taskDesc, double taskReward, LocalDateTime datetime,
             TaskStatus status, ArrayList<Contributor> contributors) {
         this.taskId = taskId;
         this.taskName = taskName;
         this.taskDesc = taskDesc;
         this.taskReward = taskReward;
-        this.createdOn = createdOn;
+        this.datetime = datetime;
         this.status = status;
         this.contributors = contributors;
     }
@@ -56,7 +56,7 @@ public class Task {
     @Override
     public String toString() {
         return "Task [taskId=" + taskId + ", taskName=" + taskName + ", taskDesc=" + taskDesc + ", taskReward="
-                + taskReward + ", createdOn=" + createdOn + ", TaskStatus=" + status + ", contributors=" + contributorsToString()
+                + taskReward + ", datetime=" + datetime + ", TaskStatus=" + status + ", contributors=" + contributorsToString()
                 + "]";
     }
 

@@ -46,4 +46,8 @@ public class ProductLogService {
     public List<ProductLog> getProductLogsByProductId(String productId) {
         return productLogRepository.findByProductId(productId);
     }
+
+    public List<ProductLog> getProductLogsInTimeframe(LocalDateTime start, LocalDateTime end) {
+        return productLogRepository.findByDatetimeBetween(start, end);
+    }
 }

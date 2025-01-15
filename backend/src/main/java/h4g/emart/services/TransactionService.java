@@ -3,6 +3,7 @@ package h4g.emart.services;
 import h4g.emart.exceptions.InsufficientBalanceException;
 import h4g.emart.models.Product;
 import h4g.emart.models.Transaction;
+import h4g.emart.models.Transaction;
 import h4g.emart.models.User;
 import h4g.emart.services.ProductService;
 import h4g.emart.services.SequenceGeneratorService;
@@ -12,6 +13,7 @@ import h4g.emart.repositories.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -122,5 +124,15 @@ public class TransactionService {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Retrieves all transactions within a certain timeframe.
+     * @param start The start of the timeframe.
+     * @param end The end of the timeframe.
+     * @return The list of transactions created in that timeframe
+     */
+    public List<Transaction> getTransactionsInTimeframe(LocalDateTime start, LocalDateTime end) {
+        return transactionRepository.findByDatetimeBetween(start, end);
     }
 }

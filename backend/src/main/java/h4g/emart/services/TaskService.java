@@ -8,10 +8,12 @@ import h4g.emart.services.SequenceGeneratorService;
 import h4g.emart.models.Contributor;
 import h4g.emart.models.ContributorStatus;
 import h4g.emart.models.PreorderStatus;
+import h4g.emart.models.Task;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -155,5 +157,15 @@ public class TaskService {
         task.setStatus(TaskStatus.CLOSED);
     
         return taskRepository.save(task);
+    }
+
+    /**
+     * Retrieves all tasks within a certain timeframe.
+     * @param start The start of the timeframe.
+     * @param end The end of the timeframe.
+     * @return The list of tasks created in that timeframe
+     */
+    public List<Task> getTasksInTimeframe(LocalDateTime start, LocalDateTime end) {
+        return taskRepository.findByDatetimeBetween(start, end);
     }
 }

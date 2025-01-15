@@ -16,17 +16,17 @@ public class ProductRequest {
     private @Getter String userId;
     private @Getter String productName;
     private @Getter String productDescription;
-    private @Getter LocalDateTime createdOn = LocalDateTime.now();
+    private @Getter LocalDateTime datetime = LocalDateTime.now();
 
     public ProductRequest() {}
 
     public ProductRequest(String requestId, String userId, String productName, String productDescription,
-            LocalDateTime createdOn) {
+            LocalDateTime datetime) {
         this.requestId = requestId;
         this.userId = userId;
         this.productName = productName;
         this.productDescription = productDescription;
-        this.createdOn = createdOn;
+        this.datetime = datetime;
     }
 
     public ProductRequest(String userId, String productName, String productDescription) {
@@ -38,6 +38,6 @@ public class ProductRequest {
     @Override
     public String toString() {
         return "ProductRequest [requestId=" + requestId + ", userId=" + userId + ", productName=" + productName
-                + ", productDescription=" + productDescription + ", createdOn=" + createdOn + "]";
+                + ", productDescription=" + productDescription + ", datetime=" + datetime + "]";
     }
 }
