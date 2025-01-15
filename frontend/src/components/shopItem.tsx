@@ -10,6 +10,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@clerk/nextjs";
+import { useToast } from "@/hooks/use-toast";
 import type { ShopItemProps } from "@/app/types/shop";
 
 const ShopItem: React.FC<ShopItemProps> = ({
@@ -22,11 +24,62 @@ const ShopItem: React.FC<ShopItemProps> = ({
     onAddToCart,
 }) => {
     const [selectedQuantity, setSelectedQuantity] = React.useState("1");
+    const [isPreordering, setIsPreordering] = React.useState(false);
+    const { userId } = useAuth();
+    const { toast } = useToast();
 
     const quantityOptions = React.useMemo(() => {
-        const maxQuantity = Math.min(5, quantity); // Change accordingly
+        const maxQuantity = Math.min(5, quantity || 5);
         return Array.from({ length: maxQuantity }, (_, i) => i + 1);
     }, [quantity]);
+
+    const handlePreorder = async () => {
+        if (!userId) {
+            toast({
+                title: "Error",
+                description: "Please log in to place a pre-order",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        setIsPreordering(true);
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API}/preorders`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        productId: id,
+                        qtyPreordered: parseInt(selectedQuantity),
+                    }),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Failed to place pre-order");
+            }
+
+            toast({
+                title: "Success",
+                description: `Pre-order placed for ${name}`,
+            });
+        } catch (error) {
+            console.error("Pre-order error:", error);
+            toast({
+                title: "Error",
+                description:
+                    "Failed to place pre-order. Please try again later.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsPreordering(false);
+        }
+    };
 
     return (
         <Card className="w-full max-w-sm">
@@ -42,8 +95,8 @@ const ShopItem: React.FC<ShopItemProps> = ({
                     <p className="text-lg font-bold">${price.toFixed(2)}</p>
                     <p className="text-sm text-gray-600">
                         {quantity === 0 ? (
-                            <span className="text-red-500 font-medium">
-                                Out of Stock
+                            <span className="text-orange-500 font-medium">
+                                Available for Pre-order
                             </span>
                         ) : (
                             <span>Stock: {quantity}</span>
@@ -55,7 +108,6 @@ const ShopItem: React.FC<ShopItemProps> = ({
                 <Select
                     value={selectedQuantity}
                     onValueChange={setSelectedQuantity}
-                    disabled={quantity === 0}
                 >
                     <SelectTrigger className="w-24">
                         <SelectValue placeholder="Quantity" />
@@ -68,13 +120,24 @@ const ShopItem: React.FC<ShopItemProps> = ({
                         ))}
                     </SelectContent>
                 </Select>
-                <Button
-                    onClick={() => onAddToCart(id, parseInt(selectedQuantity))}
-                    className="ml-4"
-                    disabled={quantity === 0}
-                >
-                    {quantity === 0 ? "Out of Stock" : "Add to Cart"}
-                </Button>
+                {quantity === 0 ? (
+                    <Button
+                        onClick={handlePreorder}
+                        className="ml-4 bg-orange-500 hover:bg-orange-600"
+                        disabled={isPreordering}
+                    >
+                        {isPreordering ? "Processing..." : "Pre-order"}
+                    </Button>
+                ) : (
+                    <Button
+                        onClick={() =>
+                            onAddToCart(id, parseInt(selectedQuantity))
+                        }
+                        className="ml-4"
+                    >
+                        Add to Cart
+                    </Button>
+                )}
             </CardFooter>
         </Card>
     );

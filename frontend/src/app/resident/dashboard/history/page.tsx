@@ -3,66 +3,40 @@
 import React from "react";
 import TopBar from "@/components/topbar";
 import TransactionHistoryTable from "@/components/transactionHistoryTable";
-import type { TransactionDisplay } from "@/app/types/transaction";
-
-const sampleTransactions: TransactionDisplay[] = [
-    {
-        transactionId: "TRX-001",
-        userId: "USER-001",
-        items: [
-            {
-                productId: "1",
-                productName: "Product 1",
-                quantity: 2,
-                pricePerUnit: 19.99,
-            },
-            {
-                productId: "2",
-                productName: "Product 2",
-                quantity: 1,
-                pricePerUnit: 29.99,
-            },
-        ],
-        totalPrice: 69.97,
-        datetime: new Date(2025, 0, 10, 14, 30).toISOString(),
-    },
-    {
-        transactionId: "TRX-002",
-        userId: "USER-001",
-        items: [
-            {
-                productId: "3",
-                productName: "Product 3",
-                quantity: 3,
-                pricePerUnit: 39.99,
-            },
-        ],
-        totalPrice: 119.97,
-        datetime: new Date(2025, 0, 11, 9, 15).toISOString(),
-    },
-    {
-        transactionId: "TRX-003",
-        userId: "USER-002",
-        items: [
-            {
-                productId: "1",
-                productName: "Product 1",
-                quantity: 1,
-                pricePerUnit: 19.99,
-            },
-        ],
-        totalPrice: 19.99,
-        datetime: new Date(2025, 0, 12, 16, 45).toISOString(),
-    },
-];
+import { Card } from "@/components/ui/card";
 
 const TransactionHistoryPage = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             <TopBar />
-            <main className="pt-4">
-                <TransactionHistoryTable transactions={sampleTransactions} />
-            </main>
+            <div className="container mx-auto px-4 py-8">
+                <div className="mb-6">
+                    <h1 className="text-2xl font-bold text-gray-900">
+                        Transaction History
+                    </h1>
+                    <p className="text-gray-600 mt-2">
+                        View and track all your past transactions
+                    </p>
+                </div>
+
+                <div className="space-y-6">
+                    <Card className="p-4 bg-white shadow-sm">
+                        <div className="text-sm text-gray-500">
+                            <p>
+                                • Click on any transaction to view detailed
+                                information
+                            </p>
+                            <p>
+                                • Use the search bar to filter transactions by
+                                ID
+                            </p>
+                            <p>• Click column headers to sort the data</p>
+                        </div>
+                    </Card>
+
+                    <TransactionHistoryTable />
+                </div>
+            </div>
         </div>
     );
 };

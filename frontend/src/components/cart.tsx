@@ -30,7 +30,6 @@ const Cart = () => {
         productId: string,
         newQuantity: number
     ) => {
-        // First check if the product is still in stock
         try {
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API}/products`
@@ -68,7 +67,6 @@ const Cart = () => {
 
         setIsCheckingOut(true);
         try {
-            // Check current stock levels
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API}/products`
             );
@@ -77,7 +75,6 @@ const Cart = () => {
             }
             const products = await response.json();
 
-            // Check if any items are out of stock
             const outOfStockItems = cartItems.filter((cartItem) => {
                 const shopItem = products.find(
                     (item: any) => item.productId === cartItem.id
@@ -97,7 +94,6 @@ const Cart = () => {
                 return;
             }
 
-            // Process each item in the cart individually
             for (const item of cartItems) {
                 const transactionData = {
                     userId: userId,
@@ -131,7 +127,6 @@ const Cart = () => {
                 }
             }
 
-            // If all transactions are successful, clear the cart
             clearCart();
 
             toast({

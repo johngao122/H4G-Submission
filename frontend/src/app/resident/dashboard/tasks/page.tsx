@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TopBar from "@/components/topbar";
 import { TaskCard } from "@/components/task";
 import { Input } from "@/components/ui/input";
@@ -11,93 +11,86 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter } from "lucide-react";
-import type { Task } from "@/app/types/task";
+import { Search } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-const SAMPLE_TASKS: Task[] = [
-    //Replace with API
-    {
-        id: "1",
-        name: "Clean Common Area",
-        description:
-            "Help clean and organize the common area including sweeping, dusting, and arranging furniture.",
-        reward: 15.0,
-        contributors: [
-            { id: "1", name: "John Doe", imageUrl: "/api/placeholder/32/32" },
-            { id: "2", name: "Jane Smith", imageUrl: "/api/placeholder/32/32" },
-        ],
-        status: "OPEN",
-    },
-    {
-        id: "2",
-        name: "Kitchen Assistance",
-        description:
-            "Assist in kitchen duties including meal preparation and cleaning.",
-        reward: 20.0,
-        contributors: [
-            {
-                id: "3",
-                name: "Mike Johnson",
-                imageUrl: "/api/placeholder/32/32",
-            },
-        ],
-        status: "CLOSED",
-    },
-    {
-        id: "3",
-        name: "Organize Library Books",
-        description:
-            "Sort and organize books in the library according to categories and alphabetical order.",
-        reward: 12.5,
-        contributors: [],
-        status: "OPEN",
-    },
-    {
-        id: "4",
-        name: "Garden Maintenance",
-        description:
-            "Help maintain the garden by watering plants, removing weeds, and general cleanup.",
-        reward: 18.0,
-        contributors: [
-            {
-                id: "4",
-                name: "Sarah Wilson",
-                imageUrl: "/api/placeholder/32/32",
-            },
-        ],
-        status: "OPEN",
-    },
-    {
-        id: "5",
-        name: "Assist with Homework",
-        description: "Help younger residents with their homework and studies.",
-        reward: 25.0,
-        contributors: [
-            { id: "5", name: "Tom Brown", imageUrl: "/api/placeholder/32/32" },
-            { id: "6", name: "Lisa Chen", imageUrl: "/api/placeholder/32/32" },
-        ],
-        status: "CLOSED",
-    },
-];
+interface Contributor {
+    taskId: string;
+    userId: string;
+    contributorName: string;
+    datetime: string;
+    status: "PENDING" | "FULFILLED" | "CANCELLED";
+}
+
+interface Task {
+    taskId: string;
+    taskName: string;
+    taskDesc: string;
+    taskReward: number;
+    datetime: string;
+    contributors: Contributor[];
+    status: "OPEN" | "CLOSED";
+}
 
 const TaskPage = () => {
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<"ALL" | "OPEN" | "CLOSED">(
         "ALL"
     );
+    const { toast } = useToast();
 
-    const filteredTasks = SAMPLE_TASKS.filter((task) => {
-        const matches = task.name
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase());
+    const fetchTasks = async () => {
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API}/tasks`
+            );
+            if (!response.ok) {
+                throw new Error("Failed to fetch tasks");
+            }
+            const data = await response.json();
+            setTasks(data);
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to load tasks. Please try again later.",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchTasks();
+    }, []);
+
+    const filteredTasks = tasks.filter((task) => {
+        const matches =
+            task.taskName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            task.taskDesc.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesStatus =
             statusFilter === "ALL" || task.status === statusFilter;
         return matches && matchesStatus;
     });
 
     const handleAcceptTask = (taskId: string) => {
-        console.log("Task Accepted:", taskId);
+        fetchTasks();
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50">
+                <TopBar />
+                <main className="container mx-auto px-4 py-8">
+                    <div className="flex justify-center items-center h-48">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    </div>
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -148,9 +141,10 @@ const TaskPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredTasks.map((task) => (
                         <TaskCard
-                            key={task.id}
+                            key={task.taskId}
                             task={task}
                             onAccept={handleAcceptTask}
+                            refreshTasks={fetchTasks}
                         />
                     ))}
 

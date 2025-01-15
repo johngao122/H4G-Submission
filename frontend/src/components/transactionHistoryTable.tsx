@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { useAuth } from "@clerk/nextjs";
+import { useToast } from "@/hooks/use-toast";
 import {
     Dialog,
     DialogContent,
@@ -31,26 +33,79 @@ import {
     useReactTable,
 } from "@tanstack/react-table";
 import {
-    ChevronDown,
     ChevronLeft,
     ChevronRight,
     ChevronsLeft,
     ChevronsRight,
+    ChevronUp,
+    ChevronDown,
+    Loader2,
 } from "lucide-react";
-import {
-    Transaction,
-    TransactionDisplay,
-    TransactionHistoryProps,
-} from "@/app/types/transaction";
 
-const TransactionHistoryTable: React.FC<TransactionHistoryProps> = ({
-    transactions,
-}) => {
+// Updated interface to match API response
+interface Transaction {
+    transactionId: string;
+    userId: string;
+    productId: string;
+    qtyPurchased: number;
+    totalPrice: number;
+    datetime: string;
+}
+
+const TransactionHistoryTable: React.FC = () => {
+    const { userId } = useAuth();
+    const { toast } = useToast();
+    const [transactions, setTransactions] = React.useState<Transaction[]>([]);
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [error, setError] = React.useState<string | null>(null);
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
     const [selectedTransaction, setSelectedTransaction] =
-        React.useState<TransactionDisplay | null>(null);
+        React.useState<Transaction | null>(null);
+
+    React.useEffect(() => {
+        const fetchTransactions = async () => {
+            if (!userId) return;
+
+            setIsLoading(true);
+            setError(null);
+
+            try {
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_API}/transactions/user/${userId}`,
+                    {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch transactions");
+                }
+
+                const data = await response.json();
+                setTransactions(data);
+            } catch (err) {
+                const errorMessage =
+                    err instanceof Error
+                        ? err.message
+                        : "An error occurred while fetching transactions";
+                setError(errorMessage);
+                toast({
+                    title: "Error",
+                    description: errorMessage,
+                    variant: "destructive",
+                });
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchTransactions();
+    }, [userId, toast]);
 
     const formatDateTime = (datetime: string) => {
         return new Date(datetime).toLocaleString("en-US", {
@@ -59,7 +114,7 @@ const TransactionHistoryTable: React.FC<TransactionHistoryProps> = ({
         });
     };
 
-    const columns: ColumnDef<TransactionDisplay>[] = [
+    const columns: ColumnDef<Transaction>[] = [
         {
             accessorKey: "transactionId",
             header: "Transaction ID",
@@ -81,10 +136,14 @@ const TransactionHistoryTable: React.FC<TransactionHistoryProps> = ({
             },
         },
         {
-            accessorKey: "items",
-            header: "Items",
-            cell: ({ row }) => `${row.original.items.length} items`,
-            enableSorting: false,
+            accessorKey: "productId",
+            header: "Product ID",
+            cell: ({ row }) => row.getValue("productId"),
+        },
+        {
+            accessorKey: "qtyPurchased",
+            header: "Quantity",
+            cell: ({ row }) => row.getValue("qtyPurchased"),
         },
         {
             accessorKey: "totalPrice",
@@ -111,6 +170,25 @@ const TransactionHistoryTable: React.FC<TransactionHistoryProps> = ({
         },
     });
 
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                <p className="text-lg font-medium text-red-500">
+                    Failed to load transactions
+                </p>
+                <p className="text-sm text-gray-500">{error}</p>
+            </div>
+        );
+    }
+
     return (
         <div className="container mx-auto px-4 py-8">
             <Card>
@@ -120,7 +198,7 @@ const TransactionHistoryTable: React.FC<TransactionHistoryProps> = ({
                 <CardContent>
                     <div className="flex items-center py-4">
                         <Input
-                            placeholder="Filter transactions..."
+                            placeholder="Filter by Transaction ID..."
                             value={
                                 (table
                                     .getColumn("transactionId")
@@ -158,12 +236,16 @@ const TransactionHistoryTable: React.FC<TransactionHistoryProps> = ({
                                                                 .header,
                                                             header.getContext()
                                                         )}
-                                                        {{
-                                                            asc: " 🔼",
-                                                            desc: " 🔽",
-                                                        }[
-                                                            header.column.getIsSorted() as string
-                                                        ] ?? null}
+                                                        {header.column.getIsSorted() && (
+                                                            <span className="ml-1">
+                                                                {header.column.getIsSorted() ===
+                                                                "asc" ? (
+                                                                    <ChevronUp className="h-4 w-4" />
+                                                                ) : (
+                                                                    <ChevronDown className="h-4 w-4" />
+                                                                )}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 )}
                                             </TableHead>
@@ -270,12 +352,13 @@ const TransactionHistoryTable: React.FC<TransactionHistoryProps> = ({
                 </CardContent>
             </Card>
 
+            {/* Optional: Simple Dialog for Transaction Details */}
             <Dialog
                 open={selectedTransaction !== null}
                 onOpenChange={(open) => !open && setSelectedTransaction(null)}
             >
                 {selectedTransaction && (
-                    <DialogContent className="max-w-2xl">
+                    <DialogContent className="max-w-md">
                         <DialogHeader>
                             <DialogTitle>Transaction Details</DialogTitle>
                             <DialogDescription>
@@ -298,58 +381,31 @@ const TransactionHistoryTable: React.FC<TransactionHistoryProps> = ({
 
                             <div>
                                 <h4 className="text-sm font-semibold mb-2">
-                                    Items Purchased
+                                    Purchase Details
                                 </h4>
-                                <div className="border rounded-lg">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Item</TableHead>
-                                                <TableHead>Quantity</TableHead>
-                                                <TableHead>Price</TableHead>
-                                                <TableHead className="text-right">
-                                                    Subtotal
-                                                </TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {selectedTransaction.items.map(
-                                                (item, index) => (
-                                                    <TableRow key={index}>
-                                                        <TableCell>
-                                                            {item.productName}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            {item.quantity}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            $
-                                                            {item.pricePerUnit.toFixed(
-                                                                2
-                                                            )}
-                                                        </TableCell>
-                                                        <TableCell className="text-right">
-                                                            $
-                                                            {(
-                                                                item.quantity *
-                                                                item.pricePerUnit
-                                                            ).toFixed(2)}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                )
-                                            )}
-                                        </TableBody>
-                                    </Table>
+                                <div className="space-y-2 text-sm">
+                                    <p>
+                                        <span className="font-medium">
+                                            Product ID:
+                                        </span>{" "}
+                                        {selectedTransaction.productId}
+                                    </p>
+                                    <p>
+                                        <span className="font-medium">
+                                            Quantity:
+                                        </span>{" "}
+                                        {selectedTransaction.qtyPurchased}
+                                    </p>
+                                    <p>
+                                        <span className="font-medium">
+                                            Total Amount:
+                                        </span>{" "}
+                                        $
+                                        {selectedTransaction.totalPrice.toFixed(
+                                            2
+                                        )}
+                                    </p>
                                 </div>
-                            </div>
-
-                            <div className="flex justify-between items-center pt-4 border-t">
-                                <span className="font-semibold">
-                                    Total Amount
-                                </span>
-                                <span className="text-xl font-bold">
-                                    ${selectedTransaction.totalPrice.toFixed(2)}
-                                </span>
                             </div>
                         </div>
                     </DialogContent>
