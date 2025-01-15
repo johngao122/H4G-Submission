@@ -1,93 +1,59 @@
+export interface AuditLog {
+    logId: string;
+    userId: string;
+    productId: string;
+    datetime: string;
+    action: string;
+}
+
+export interface ProductRequest {
+    requestId: string;
+    userId: string;
+    productName: string;
+    productDescription: string;
+    createdOn: string;
+}
+
 export interface ReportMetadata {
     startDate: string;
     endDate: string;
     generatedAt: string;
-    generatedBy: string;
-    reportType: "inventory" | "audit";
-}
-
-export interface InventoryMovement {
-    id: string;
-    itemId: string;
-    itemName: string;
-    movementType: "IN" | "OUT";
-    quantity: number;
-    reason: string;
-    timestamp: string;
-    performedBy: string;
-}
-
-export interface InventoryStatus {
-    id: string;
-    name: string;
-    currentQuantity: number;
-    category: string;
-    lastUpdated: string;
-    minimumStock: number;
-    maximumStock: number;
-}
-
-export interface AuditLogEntry {
-    id: string;
-    action: "CREATE" | "UPDATE" | "DELETE";
-    itemId: string;
-    itemName: string;
-    changes: {
-        field: string;
-        oldValue: string;
-        newValue: string;
-    }[];
-    userId: string;
-    timestamp: string;
-}
-
-export interface InventoryReport {
-    metadata: ReportMetadata;
-    inventoryStatus: InventoryStatus[];
-    movements: InventoryMovement[];
-    summary: {
-        totalItems: number;
-        totalValue: number;
-        lowStockItems: number;
-        outOfStockItems: number;
-        totalMovements: {
-            in: number;
-            out: number;
-        };
-    };
-}
-
-export interface AuditReport {
-    metadata: ReportMetadata;
-    entries: AuditLogEntry[];
-    summary: {
-        totalActions: number;
-        actionsByType: {
-            CREATE: number;
-            UPDATE: number;
-            DELETE: number;
-        };
-        mostModifiedItems: {
-            itemId: string;
-            itemName: string;
-            modificationCount: number;
-        }[];
-    };
 }
 
 export interface ReportRequest {
     startDate: string;
     endDate: string;
-    reportType: "inventory" | "audit";
-    filters?: {
-        categories?: string[];
-        users?: string[];
-        actions?: string[];
+    reportType: "audit" | "request";
+}
+
+export interface AuditLogReport {
+    metadata: ReportMetadata;
+    logs: AuditLog[];
+    summary: {
+        totalLogs: number;
+        uniqueUsers: number;
+        uniqueProducts: number;
+    };
+}
+
+export interface RequestReport {
+    metadata: ReportMetadata;
+    requests: ProductRequest[];
+    summary: {
+        totalRequests: number;
+        uniqueUsers: number;
     };
 }
 
 export type ReportResponse = {
     success: boolean;
-    data: InventoryReport | AuditReport;
+    data: AuditLogReport | RequestReport;
     error?: string;
 };
+
+export interface ReportFilters {
+    userId?: string;
+    productId?: string;
+    actionType?: string;
+    status?: string;
+}
