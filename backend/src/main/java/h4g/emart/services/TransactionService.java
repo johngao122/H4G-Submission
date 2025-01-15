@@ -56,7 +56,11 @@ public class TransactionService {
      * @return A list of transactions associated with the specified user.
      */
     public List<Transaction> getTransactionsByUserId(String userId) {
-        return transactionRepository.findByUserId(userId);
+        User user = userService.getUserById(userId);
+        if (user != null) {
+            return transactionRepository.findByUserId(userId);
+        }
+        return null;
     }
 
     /**

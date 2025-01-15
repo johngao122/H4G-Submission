@@ -39,7 +39,7 @@ public class TransactionController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Transaction>> getTransactionsByUserId(@PathVariable String userId) {
         List<Transaction> transactions = transactionService.getTransactionsByUserId(userId);
-        if (transactions.isEmpty()) {
+        if (transactions == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(transactions, HttpStatus.OK);
