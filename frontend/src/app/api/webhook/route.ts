@@ -39,52 +39,52 @@ export async function POST(req: Request) {
     const eventType = evt.type;
 
     if (eventType === "user.created") {
-        const { id, unsafe_metadata } = evt.data;
+        const { id, first_name, last_name, unsafe_metadata } = evt.data;
         const signUpRoute =
             unsafe_metadata && typeof unsafe_metadata === "object"
                 ? (unsafe_metadata as { signUpRoute?: string }).signUpRoute
                 : undefined;
         const role = determineUserRole(signUpRoute);
-        if (role === "admin") {
-            try {
-                const clerk = await clerkClient();
-                await clerk.users.updateUser(id, {
-                    publicMetadata: { role },
-                });
 
-                console.log(clerk.users.getUser(id));
+        try {
+            const clerk = await clerkClient();
+            const metadata =
+                role === "admin" ? { role } : { role, VoucherBalance: 0 };
 
-                return NextResponse.json({
-                    message: "User role set successfully",
-                    role,
-                });
-            } catch (error) {
-                console.error("Error updating user metadata:", error);
-                return NextResponse.json(
-                    { error: "Error updating user metadata" },
-                    { status: 500 }
-                );
+            await clerk.users.updateUser(id, {
+                publicMetadata: metadata,
+            });
+            const apiResponse = await fetch(
+                `${process.env.NEXT_PUBLIC_API}/users`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        name:
+                            `${first_name || ""} ${last_name || ""}`.trim() ||
+                            "User",
+                        role: role,
+                        voucherBal: role === "admin" ? undefined : 0,
+                    }),
+                }
+            );
+
+            if (!apiResponse.ok) {
+                throw new Error("Failed to create user in backend API");
             }
-        } else {
-            try {
-                const clerk = await clerkClient();
-                await clerk.users.updateUser(id, {
-                    publicMetadata: { role, VoucherBalance: 0 },
-                });
 
-                console.log(clerk.users.getUser(id));
-
-                return NextResponse.json({
-                    message: "User role set successfully",
-                    role,
-                });
-            } catch (error) {
-                console.error("Error updating user metadata:", error);
-                return NextResponse.json(
-                    { error: "Error updating user metadata" },
-                    { status: 500 }
-                );
-            }
+            return NextResponse.json({
+                message: "User created successfully",
+                role,
+            });
+        } catch (error) {
+            console.error("Error in user creation process:", error);
+            return NextResponse.json(
+                { error: "Error in user creation process" },
+                { status: 500 }
+            );
         }
     }
 
@@ -97,6 +97,5 @@ function determineUserRole(
     if (signUpRoute === "admin") {
         return "admin";
     }
-
     return "resident";
 }

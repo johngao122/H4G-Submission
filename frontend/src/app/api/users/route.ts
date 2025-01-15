@@ -11,8 +11,8 @@ export async function GET() {
             id: user.id,
             name: `${user.firstName} ${user.lastName}`,
             role:
-                (user.publicMetadata.role as "Admin" | "Resident") ||
-                "Resident",
+                (user.publicMetadata.role as "admin" | "resident") ||
+                "resident",
             voucherBalance: (user.publicMetadata.voucherBalance as number) || 0,
             status: user.publicMetadata.suspended ? "SUSPENDED" : "ACTIVE",
             createdAt: user.createdAt,
@@ -77,6 +77,25 @@ export async function PATCH(req: Request) {
                 updateData.voucherBalance = data.voucherBalance;
                 break;
 
+            case "UPDATE_METADATA":
+                if (!data) {
+                    return NextResponse.json(
+                        {
+                            error: "Data is required for UPDATE_METADATA action",
+                        },
+                        { status: 400 }
+                    );
+                }
+
+                updateData = {
+                    ...updateData,
+                    role: data.role || updateData.role,
+                    suspended: data.suspended ?? updateData.suspended,
+                    voucherBalance:
+                        data.voucherBalance ?? updateData.voucherBalance,
+                };
+                break;
+
             default:
                 return NextResponse.json(
                     { error: "Invalid action" },
@@ -87,6 +106,21 @@ export async function PATCH(req: Request) {
         await clerk.users.updateUser(userId, {
             publicMetadata: updateData,
         });
+
+        if (
+            data?.firstName ||
+            data?.lastName ||
+            data?.username ||
+            data?.password
+        ) {
+            const userUpdateData: any = {};
+            if (data.firstName) userUpdateData.firstName = data.firstName;
+            if (data.lastName) userUpdateData.lastName = data.lastName;
+            if (data.username) userUpdateData.username = data.username;
+            if (data.password) userUpdateData.password = data.password;
+
+            await clerk.users.updateUser(userId, userUpdateData);
+        }
 
         return NextResponse.json({ success: true });
     } catch (error) {

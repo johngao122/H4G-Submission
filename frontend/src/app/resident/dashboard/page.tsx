@@ -79,7 +79,7 @@ export default function ResidentDashboard() {
     if (!user) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <p>Please sign in to access your dashboard</p>
+                <a href="/">Please sign in to access your dashboard</a>
             </div>
         );
     }

@@ -7,7 +7,10 @@ export default function Page() {
     return (
         <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
             <div className="w-full max-w-md flex flex-col">
-                <SignIn fallbackRedirectUrl={"/resident/dashboard"} />
+                <SignIn
+                    fallbackRedirectUrl={"/resident/dashboard"}
+                    signUpUrl="/resident/signup"
+                />
             </div>
         </div>
     );
