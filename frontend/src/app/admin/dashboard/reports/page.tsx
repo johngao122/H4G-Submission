@@ -2,9 +2,11 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { DateRange } from "react-day-picker";
+import { DateRange, Range } from "react-date-range";
+import "react-date-range/dist/styles.css";
+import "react-date-range/dist/theme/default.css";
 import { cn } from "@/lib/utils";
 
 import {
@@ -27,25 +29,27 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import TopBarAdmin from "@/components/topbarAdmin";
 
 export default function ReportsPage() {
     const router = useRouter();
     const [reportType, setReportType] = React.useState<string>("");
-    const [date, setDate] = React.useState<DateRange | undefined>({
-        from: undefined,
-        to: undefined,
-    });
+    const [dateState, setDateState] = React.useState<Range[]>([
+        {
+            startDate: new Date(),
+            endDate: addDays(new Date(), 7),
+            key: "selection",
+        },
+    ]);
 
     const handleGenerateReport = () => {
-        if (!reportType || !date?.from || !date?.to) {
+        if (!reportType || !dateState[0].startDate || !dateState[0].endDate) {
             return;
         }
 
-        const formattedStartDate = format(date.from, "yyyy-MM-dd");
-        const formattedEndDate = format(date.to, "yyyy-MM-dd");
+        const formattedStartDate = format(dateState[0].startDate, "yyyy-MM-dd");
+        const formattedEndDate = format(dateState[0].endDate, "yyyy-MM-dd");
 
         router.push(
             `/admin/dashboard/reports/${reportType}/${[
@@ -59,8 +63,6 @@ export default function ReportsPage() {
         <div className="min-h-screen bg-gray-50">
             <TopBarAdmin />
             <div className="container mx-auto px-4 py-8 mt-16">
-                {" "}
-                {/* Added mt-16 for spacing below TopBar */}
                 <Card>
                     <CardHeader>
                         <CardTitle>Generate Reports</CardTitle>
@@ -101,26 +103,24 @@ export default function ReportsPage() {
                                         variant={"outline"}
                                         className={cn(
                                             "w-full justify-start text-left font-normal",
-                                            !date && "text-muted-foreground"
+                                            !dateState &&
+                                                "text-muted-foreground"
                                         )}
                                     >
                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {date?.from ? (
-                                            date.to ? (
-                                                <>
-                                                    {format(
-                                                        date.from,
-                                                        "LLL dd, y"
-                                                    )}{" "}
-                                                    -{" "}
-                                                    {format(
-                                                        date.to,
-                                                        "LLL dd, y"
-                                                    )}
-                                                </>
-                                            ) : (
-                                                format(date.from, "LLL dd, y")
-                                            )
+                                        {dateState[0].startDate &&
+                                        dateState[0].endDate ? (
+                                            <>
+                                                {format(
+                                                    dateState[0].startDate,
+                                                    "LLL dd, y"
+                                                )}{" "}
+                                                -{" "}
+                                                {format(
+                                                    dateState[0].endDate,
+                                                    "LLL dd, y"
+                                                )}
+                                            </>
                                         ) : (
                                             <span>Pick a date range</span>
                                         )}
@@ -130,15 +130,20 @@ export default function ReportsPage() {
                                     className="w-auto p-0"
                                     align="start"
                                 >
-                                    <Calendar
-                                        initialFocus
-                                        mode="range"
-                                        defaultMonth={date?.from}
-                                        selected={date}
-                                        onSelect={setDate}
-                                        numberOfMonths={2}
-                                        disabled={(date) => date > new Date()}
-                                    />
+                                    <div className="p-3">
+                                        <DateRange
+                                            onChange={(item) =>
+                                                setDateState([item.selection])
+                                            }
+                                            ranges={dateState}
+                                            months={2}
+                                            direction="horizontal"
+                                            rangeColors={["#0073C5"]}
+                                            maxDate={new Date()}
+                                            showDateDisplay={false}
+                                            className="border-none shadow-none"
+                                        />
+                                    </div>
                                 </PopoverContent>
                             </Popover>
                         </div>
@@ -147,7 +152,11 @@ export default function ReportsPage() {
                         <Button
                             className="w-full"
                             onClick={handleGenerateReport}
-                            disabled={!reportType || !date?.from || !date?.to}
+                            disabled={
+                                !reportType ||
+                                !dateState[0].startDate ||
+                                !dateState[0].endDate
+                            }
                         >
                             Generate Report
                         </Button>
