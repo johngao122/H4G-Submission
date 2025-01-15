@@ -178,6 +178,7 @@ const ResponsiveHeader: React.FC<ResponsiveHeaderProps> = ({
     onOpenSuspendDialog,
     onOpenDeleteDialog,
 }) => {
+    const router = useRouter();
     const hasSelectedSuspendedUsers = selectedRows.some(
         (row) => row.original.status === "SUSPENDED"
     );
@@ -330,6 +331,7 @@ const MobileCardView: React.FC<MobileCardViewProps> = ({
     isLoading,
     onUpdateUser,
 }) => {
+    const router = useRouter();
     return (
         <div className="space-y-4 md:hidden">
             {table.getRowModel().rows.map((row) => (
@@ -374,7 +376,9 @@ const MobileCardView: React.FC<MobileCardViewProps> = ({
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
                                         onClick={() => {
-                                            /* Handle edit */
+                                            router.push(
+                                                "/users/" + row.getValue("id")
+                                            );
                                         }}
                                         disabled={isLoading}
                                     >
@@ -785,7 +789,9 @@ export function UserManagementDataTable() {
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                     onClick={() => {
-                                        /* Handle edit */
+                                        router.push(
+                                            `/admin/dashboard/users/${user.id}`
+                                        );
                                     }}
                                     disabled={isLoading}
                                 >
