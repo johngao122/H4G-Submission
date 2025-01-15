@@ -11,41 +11,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "./ui/select";
-import { Product } from "@/app/types/shop";
 import { useAuth } from "@clerk/nextjs";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/context/cartContext";
-
-const SAMPLE_PRODUCTS: Product[] = [
-    //remove when API is out
-    {
-        id: "1",
-        name: "Product 1",
-        description: "Description of Product 1",
-        price: 19.99,
-        imageUrl: "/api/placeholder/300/200",
-        quantity: 200,
-        Category: "Category 1",
-    },
-    {
-        id: "2",
-        name: "Product 2",
-        description: "Description of Product 2",
-        price: 29.99,
-        imageUrl: "/api/placeholder/300/200",
-        quantity: 100,
-        Category: "Category 2",
-    },
-    {
-        id: "3",
-        name: "Product 3",
-        description: "Description of Product 3",
-        price: 39.99,
-        imageUrl: "/api/placeholder/300/200",
-        quantity: 0,
-        Category: "Category 3",
-    },
-];
 
 const Cart = () => {
     const { userId } = useAuth();
@@ -58,19 +26,41 @@ const Cart = () => {
         0
     );
 
-    const handleQuantityChange = (productId: string, newQuantity: number) => {
-        const product = SAMPLE_PRODUCTS.find((p) => p.id === productId);
+    const handleQuantityChange = async (
+        productId: string,
+        newQuantity: number
+    ) => {
+        // First check if the product is still in stock
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API}/products`
+            );
+            if (!response.ok) {
+                throw new Error("Failed to fetch product information");
+            }
+            const products = await response.json();
+            const product = products.find(
+                (p: any) => p.productId === productId
+            );
 
-        if (product && newQuantity > product.quantity) {
+            if (!product || newQuantity > product.quantity) {
+                toast({
+                    title: "Error",
+                    description: "Not enough stock available",
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            updateQuantity(productId, newQuantity);
+        } catch (error) {
+            console.error("Error checking stock:", error);
             toast({
                 title: "Error",
-                description: "Not enough stock available",
+                description: "Failed to update quantity. Please try again.",
                 variant: "destructive",
             });
-            return;
         }
-
-        updateQuantity(productId, newQuantity);
     };
 
     const handleCheckout = async () => {
@@ -78,10 +68,19 @@ const Cart = () => {
 
         setIsCheckingOut(true);
         try {
+            // Check current stock levels
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API}/products`
+            );
+            if (!response.ok) {
+                throw new Error("Failed to fetch product information");
+            }
+            const products = await response.json();
+
+            // Check if any items are out of stock
             const outOfStockItems = cartItems.filter((cartItem) => {
-                const shopItem = SAMPLE_PRODUCTS.find(
-                    //replace with API
-                    (item) => item.id === cartItem.id
+                const shopItem = products.find(
+                    (item: any) => item.productId === cartItem.id
                 );
                 return !shopItem || shopItem.quantity < cartItem.quantity;
             });
@@ -98,20 +97,41 @@ const Cart = () => {
                 return;
             }
 
-            const transaction = {
-                userId,
-                items: cartItems.map((item) => ({
+            // Process each item in the cart individually
+            for (const item of cartItems) {
+                const transactionData = {
+                    userId: userId,
                     productId: item.id,
-                    quantity: item.quantity,
-                    pricePerUnit: item.price,
-                })),
-                totalPrice: totalAmount,
-                datetime: new Date().toISOString(),
-            };
+                    qtyPurchased: item.quantity,
+                };
 
-            // TODO: Replace with actual API call
-            console.log("Processing transaction:", transaction);
+                const checkoutResponse = await fetch(
+                    `${process.env.NEXT_PUBLIC_API}/transactions`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify(transactionData),
+                    }
+                );
 
+                if (checkoutResponse.status === 500) {
+                    toast({
+                        title: "Checkout Failed",
+                        description:
+                            "Unable to checkout, please check your balance and try again",
+                        variant: "destructive",
+                    });
+                    return;
+                }
+
+                if (!checkoutResponse.ok) {
+                    throw new Error("Transaction failed");
+                }
+            }
+
+            // If all transactions are successful, clear the cart
             clearCart();
 
             toast({

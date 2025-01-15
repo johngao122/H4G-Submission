@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -15,72 +17,88 @@ import { Product } from "@/app/types/shop";
 import { useCart } from "@/context/cartContext";
 import { useToast } from "@/hooks/use-toast";
 
-const SAMPLE_PRODUCTS: Product[] = [
-    {
-        id: "1",
-        name: "Product 1",
-        description: "Description of Product 1",
-        price: 19.99,
-        imageUrl: "/api/placeholder/300/200",
-        Category: "Category 1",
-        quantity: 200,
-    },
-    {
-        id: "2",
-        name: "Product 2",
-        description: "Description of Product 2",
-        price: 29.99,
-        imageUrl: "/api/placeholder/300/200",
-        Category: "Category 2",
-        quantity: 100,
-    },
-    {
-        id: "3",
-        name: "Product 3",
-        description: "Description of Product 3",
-        price: 39.99,
-        imageUrl: "/api/placeholder/300/200",
-        Category: "Category 3",
-        quantity: 0,
-    },
-];
+interface ApiProduct {
+    productId: string;
+    name: string;
+    category: string;
+    desc: string;
+    price: number;
+    quantity: number;
+    productPhoto: string;
+}
 
 const Shop: React.FC = () => {
     const router = useRouter();
     const { toast } = useToast();
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("all");
-    const [filteredProducts, setFilteredProducts] =
-        useState<Product[]>(SAMPLE_PRODUCTS);
+    const [products, setProducts] = useState<Product[]>([]);
+    const [categories, setCategories] = useState<string[]>(["all"]);
+    const [isLoading, setIsLoading] = useState(true);
     const { totalItems, addToCart } = useCart();
 
-    // Get unique categories from products
-    const categories = [
-        "all",
-        ...new Set(SAMPLE_PRODUCTS.map((product) => product.Category)),
-    ];
-
     useEffect(() => {
-        const filtered = SAMPLE_PRODUCTS.filter((product) => {
-            const matchesSearch =
-                product.name
-                    .toLowerCase()
-                    .includes(searchQuery.toLowerCase()) ||
-                product.description
-                    .toLowerCase()
-                    .includes(searchQuery.toLowerCase());
+        const fetchProducts = async () => {
+            try {
+                setIsLoading(true);
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_API}/products`
+                );
+                if (!response.ok) {
+                    throw new Error("Failed to fetch products");
+                }
+                const apiProducts: ApiProduct[] = await response.json();
 
-            const matchesCategory =
-                selectedCategory === "all" ||
-                product.Category === selectedCategory;
+                // Transform API products to match our Product interface
+                const transformedProducts: Product[] = apiProducts.map((p) => ({
+                    id: p.productId,
+                    name: p.name,
+                    description: p.desc,
+                    price: p.price,
+                    imageUrl: p.productPhoto || "/api/placeholder/300/200",
+                    quantity: p.quantity,
+                    Category: p.category,
+                }));
 
-            return matchesSearch && matchesCategory;
-        });
-        setFilteredProducts(filtered);
-    }, [searchQuery, selectedCategory]);
+                setProducts(transformedProducts);
+
+                // Extract unique categories
+                const uniqueCategories = [
+                    "all",
+                    ...new Set(apiProducts.map((p) => p.category)),
+                ];
+                setCategories(uniqueCategories);
+            } catch (error) {
+                console.error("Error fetching products:", error);
+                toast({
+                    title: "Error",
+                    description:
+                        "Failed to load products. Please try again later.",
+                    variant: "destructive",
+                });
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchProducts();
+    }, [toast]);
+
+    const filteredProducts = products.filter((product) => {
+        const matchesSearch =
+            product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            product.description
+                .toLowerCase()
+                .includes(searchQuery.toLowerCase());
+
+        const matchesCategory =
+            selectedCategory === "all" || product.Category === selectedCategory;
+
+        return matchesSearch && matchesCategory;
+    });
 
     const handleAddToCart = (productId: string, quantity: number) => {
-        const productToAdd = SAMPLE_PRODUCTS.find((p) => p.id === productId);
+        const productToAdd = products.find((p) => p.id === productId);
         if (!productToAdd || productToAdd.quantity === 0) {
             toast({
                 title: "Error",
@@ -105,6 +123,16 @@ const Shop: React.FC = () => {
             description: `${productToAdd.name} added to cart`,
         });
     };
+
+    if (isLoading) {
+        return (
+            <div className="container mx-auto px-4 py-8">
+                <div className="flex justify-center items-center h-64">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="container mx-auto px-4 py-8">

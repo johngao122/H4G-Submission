@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import VoucherBalance from "@/components/voucherBalance";
 import TopBar from "@/components/topbar";
 import { Card } from "@/components/ui/card";
@@ -7,68 +7,106 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUser } from "@clerk/nextjs";
 import { Badge } from "@/components/ui/badge";
 
-// Sample data - remove when API is ready
-const SAMPLE_TRANSACTIONS = [
-    {
-        id: 1,
-        description: "Purchase: Snack Pack",
-        amount: -2.5,
-        date: "2025-01-12 14:30",
-    },
-    {
-        id: 2,
-        description: "Task Reward: Room Cleaning",
-        amount: 5.0,
-        date: "2025-01-11 09:15",
-    },
-    {
-        id: 3,
-        description: "Purchase: Stationery Set",
-        amount: -3.75,
-        date: "2025-01-10 16:45",
-    },
-    {
-        id: 4,
-        description: "Task Reward: Homework Help",
-        amount: 4.0,
-        date: "2025-01-09 11:20",
-    },
-    {
-        id: 5,
-        description: "Purchase: Toiletries",
-        amount: -6.25,
-        date: "2025-01-08 13:50",
-    },
-];
+// Type definitions for API responses
+interface TaskContributor {
+    taskId: string;
+    userId: string;
+    datetime: string;
+    status: string;
+}
 
-const SAMPLE_TASKS = [
-    {
-        id: "1",
-        name: "Room Cleaning",
-        description: "Help clean the common room",
-        reward: 5.0,
-        status: "OPEN",
-    },
-    {
-        id: "2",
-        name: "Kitchen Assistant",
-        description: "Help with meal preparation",
-        reward: 4.0,
-        status: "OPEN",
-    },
-    {
-        id: "3",
-        name: "Study Group Leader",
-        description: "Lead evening study session",
-        reward: 6.0,
-        status: "CLOSED",
-    },
-];
+interface Task {
+    taskId: string;
+    taskName: string;
+    taskDesc: string;
+    taskReward: number;
+    datetime: string;
+    contributors: TaskContributor[];
+    status: "OPEN" | "CLOSED";
+}
+
+interface Transaction {
+    transactionId: string;
+    userId: string;
+    productId: string;
+    qtyPurchased: number;
+    totalPrice: number;
+    datetime: string;
+}
+
+interface UserDetails {
+    userId: string;
+    name: string;
+    voucherBal: number;
+    role: string;
+    status: string;
+}
 
 export default function ResidentDashboard() {
     const { isSignedIn, user, isLoaded } = useUser();
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [voucherBalance, setVoucherBalance] = useState<number>(0);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    if (!isLoaded) {
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!user) return;
+
+            try {
+                const userResponse = await fetch(
+                    `${process.env.NEXT_PUBLIC_API}/users/${user.id}`,
+                    {
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+                if (!userResponse.ok)
+                    throw new Error("Failed to fetch voucher balance");
+                const userData: UserDetails = await userResponse.json();
+                setVoucherBalance(userData.voucherBal);
+
+                const tasksResponse = await fetch(
+                    `${process.env.NEXT_PUBLIC_API}/tasks`,
+                    {
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+                if (!tasksResponse.ok) throw new Error("Failed to fetch tasks");
+                const tasksData = await tasksResponse.json();
+                setTasks(tasksData);
+
+                const transactionsResponse = await fetch(
+                    `${process.env.NEXT_PUBLIC_API}/transactions/user/${user.id}`,
+                    {
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+                if (!transactionsResponse.ok)
+                    throw new Error("Failed to fetch transactions");
+                const transactionsData = await transactionsResponse.json();
+                setTransactions(transactionsData);
+            } catch (err) {
+                setError(
+                    err instanceof Error ? err.message : "An error occurred"
+                );
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (user) {
+            fetchData();
+        }
+    }, [user]);
+
+    if (!isLoaded || loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <p>Loading...</p>
@@ -97,45 +135,66 @@ export default function ResidentDashboard() {
                     </p>
                 </div>
 
+                {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                        {error}
+                    </div>
+                )}
+
                 <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-6">
-                        <VoucherBalance balance={15} />
+                        <VoucherBalance balance={voucherBalance} />
 
                         <div>
                             <h2 className="text-xl font-bold mb-4">
                                 Available Tasks
                             </h2>
-                            <div className="space-y-4">
-                                {SAMPLE_TASKS.map((task) => (
-                                    <Card key={task.id} className="p-4">
-                                        <div className="flex justify-between items-start">
-                                            <h3 className="font-bold">
-                                                {task.name}
-                                            </h3>
-                                            <Badge
-                                                variant={
-                                                    task.status === "OPEN"
-                                                        ? "default"
-                                                        : "secondary"
-                                                }
-                                                className={`px-2 py-1 text-xs ${
-                                                    task.status === "OPEN"
-                                                        ? "bg-black text-white"
-                                                        : "bg-gray-200 text-gray-700"
-                                                }`}
-                                            >
-                                                {task.status}
-                                            </Badge>
-                                        </div>
-                                        <p className="text-sm text-gray-500 mt-2">
-                                            {task.description}
-                                        </p>
-                                        <p className="text-sm mt-2">
-                                            Reward: ${task.reward.toFixed(2)}
-                                        </p>
-                                    </Card>
-                                ))}
-                            </div>
+                            {tasks.length === 0 ? (
+                                <Card className="p-6">
+                                    <p className="text-gray-500 text-center">
+                                        No tasks available
+                                    </p>
+                                </Card>
+                            ) : (
+                                <div className="space-y-4">
+                                    {tasks.map((task) => (
+                                        <Card key={task.taskId} className="p-4">
+                                            <div className="flex justify-between items-start">
+                                                <h3 className="font-bold">
+                                                    {task.taskName}
+                                                </h3>
+                                                <Badge
+                                                    variant={
+                                                        task.status === "OPEN"
+                                                            ? "default"
+                                                            : "secondary"
+                                                    }
+                                                    className={`px-2 py-1 text-xs ${
+                                                        task.status === "OPEN"
+                                                            ? "bg-black text-white"
+                                                            : "bg-gray-200 text-gray-700"
+                                                    }`}
+                                                >
+                                                    {task.status}
+                                                </Badge>
+                                            </div>
+                                            <p className="text-sm text-gray-500 mt-2">
+                                                {task.taskDesc}
+                                            </p>
+                                            <p className="text-sm mt-2">
+                                                Reward: $
+                                                {task.taskReward.toFixed(2)}
+                                            </p>
+                                            {task.contributors.length > 0 && (
+                                                <p className="text-sm text-gray-500 mt-2">
+                                                    Contributors:{" "}
+                                                    {task.contributors.length}
+                                                </p>
+                                            )}
+                                        </Card>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -144,38 +203,38 @@ export default function ResidentDashboard() {
                             Recent Transactions
                         </h2>
                         <Card>
-                            <ScrollArea className="">
+                            <ScrollArea>
                                 <div className="p-6">
-                                    {SAMPLE_TRANSACTIONS.map((transaction) => (
-                                        <div
-                                            key={transaction.id}
-                                            className="flex items-center justify-between py-3"
-                                        >
-                                            <div>
-                                                <p className="font-medium">
-                                                    {transaction.description}
-                                                </p>
-                                                <p className="text-sm text-gray-500 mt-1">
-                                                    {transaction.date}
-                                                </p>
-                                            </div>
-                                            <span
-                                                className={`${
-                                                    transaction.amount > 0
-                                                        ? "text-green-600"
-                                                        : "text-red-600"
-                                                }`}
+                                    {transactions.length === 0 ? (
+                                        <p className="text-gray-500 text-center">
+                                            No recent transactions
+                                        </p>
+                                    ) : (
+                                        transactions.map((transaction) => (
+                                            <div
+                                                key={transaction.transactionId}
+                                                className="flex items-center justify-between py-3"
                                             >
-                                                {transaction.amount > 0
-                                                    ? "+"
-                                                    : "-"}
-                                                $
-                                                {Math.abs(
-                                                    transaction.amount
-                                                ).toFixed(2)}
-                                            </span>
-                                        </div>
-                                    ))}
+                                                <div>
+                                                    <p className="font-medium">
+                                                        Transaction:{" "}
+                                                        {transaction.productId}
+                                                    </p>
+                                                    <p className="text-sm text-gray-500 mt-1">
+                                                        {new Date(
+                                                            transaction.datetime
+                                                        ).toLocaleString()}
+                                                    </p>
+                                                </div>
+                                                <span className="text-red-600">
+                                                    -$
+                                                    {transaction.totalPrice.toFixed(
+                                                        2
+                                                    )}
+                                                </span>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             </ScrollArea>
                         </Card>
