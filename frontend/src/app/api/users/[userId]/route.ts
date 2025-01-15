@@ -1,12 +1,13 @@
 import { clerkClient } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 
 export async function GET(
-    request: Request,
-    context: { params: Promise<{ userId: string }> }
+    request: NextRequest,
+    { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
+        const clerk = await clerkClient();
         const { userId: authUserId } = await auth();
         if (!authUserId) {
             return NextResponse.json(
@@ -15,9 +16,7 @@ export async function GET(
             );
         }
 
-        const params = await context.params;
-        const clerk = await clerkClient();
-        const user = await clerk.users.getUser(params.userId);
+        const user = await clerk.users.getUser((await params).userId);
 
         return NextResponse.json({
             id: user.id,
@@ -42,11 +41,13 @@ export async function GET(
         );
     }
 }
+
 export async function PATCH(
-    request: Request,
-    { params }: { params: { userId: string } }
+    request: NextRequest,
+    { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
+        const clerk = await clerkClient();
         const { userId: authUserId } = await auth();
         if (!authUserId) {
             return NextResponse.json(
@@ -56,16 +57,43 @@ export async function PATCH(
         }
 
         const data = await request.json();
-        const clerk = await clerkClient();
 
-        // Update basic user information
-        const updateData: any = {};
+        const authUser = await clerk.users.getUser(authUserId);
+        const isAdmin = authUser.publicMetadata.role === "admin";
+
+        if (!isAdmin) {
+            return NextResponse.json(
+                { error: "Unauthorized: Admin access required" },
+                { status: 403 }
+            );
+        }
+
+        const updateData: Record<string, any> = {};
         if (data.firstName) updateData.firstName = data.firstName;
         if (data.lastName) updateData.lastName = data.lastName;
         if (data.username) updateData.username = data.username;
         if (data.password) updateData.password = data.password;
 
-        await clerk.users.updateUser(params.userId, updateData);
+        if (
+            data.role ||
+            data.voucherBalance !== undefined ||
+            data.suspended !== undefined
+        ) {
+            const publicMetadata = {
+                ...(await clerk.users.getUser((await params).userId))
+                    .publicMetadata,
+                ...(data.role && { role: data.role }),
+                ...(data.voucherBalance !== undefined && {
+                    voucherBalance: data.voucherBalance,
+                }),
+                ...(data.suspended !== undefined && {
+                    suspended: data.suspended,
+                }),
+            };
+            updateData.publicMetadata = publicMetadata;
+        }
+
+        await clerk.users.updateUser((await params).userId, updateData);
 
         return NextResponse.json({ success: true });
     } catch (error) {
