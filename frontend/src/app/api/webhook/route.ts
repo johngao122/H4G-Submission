@@ -49,7 +49,9 @@ export async function POST(req: Request) {
         try {
             const clerk = await clerkClient();
             const metadata =
-                role === "admin" ? { role } : { role, VoucherBalance: 0 };
+                role === "admin"
+                    ? { role, suspended: false }
+                    : { role, VoucherBalance: 0, suspended: false };
 
             await clerk.users.updateUser(id, {
                 publicMetadata: metadata,
@@ -62,6 +64,7 @@ export async function POST(req: Request) {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
+                        userId: id,
                         name:
                             `${first_name || ""} ${last_name || ""}`.trim() ||
                             "User",
