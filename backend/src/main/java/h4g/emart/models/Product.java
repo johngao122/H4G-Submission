@@ -18,12 +18,12 @@ public class Product {
     private @Getter @Setter String desc;
     private @Getter @Setter double price;
     private @Getter @Setter long quantity;
-    private @Getter @Setter byte[] productPhoto;
+    private @Getter @Setter String productPhoto;
 
     public Product() {}
     
     public Product(String productId, String name, String category, String desc, double price, long quantity,
-            byte[] productPhoto) {
+            String productPhoto) {
         this.productId = productId;
         this.name = name;
         this.category = category;
@@ -34,7 +34,7 @@ public class Product {
     }
 
     // Placeholder Product request
-    public Product(String name, String category, String desc, double price, long quantity, byte[] productPhoto) {
+    public Product(String name, String category, String desc, double price, long quantity, String productPhoto) {
         this.name = name;
         this.category = category;
         this.desc = desc;
@@ -50,8 +50,7 @@ public class Product {
     @Override
     public String toString() {
         return "Product [productId=" + productId + ", name=" + name + ", category=" + category + ", desc=" + desc
-                + ", price=" + price + ", quantity=" + quantity + ", productPhoto=" + Arrays.toString(productPhoto)
-                + "]";
+                + ", price=" + price + ", quantity=" + quantity + "]";
     }
     
 }
