@@ -1,7 +1,8 @@
 # Introduction
 Our web-based minimart and voucher system solution for the Muhammadiyah Welfare Home involves a website: "Mahammadiyah Welfare Hub" (referred to in this document as MWH). 
 
-MWH was built with Clerk and deployed on Vercel for demonstration.
+MWH was built on NextJS and Springboot, secured with Clerk and deployed on Vercel and Railway for demonstration.
+View the live app here: https://h4-g-submission.vercel.app/
 <br><br>
 
 # Login Page
