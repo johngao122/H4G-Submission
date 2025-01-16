@@ -1,16 +1,72 @@
 # Introduction
-Our web-based minimart and voucher system solution for the Muhammadiyah Welfare Home involves a website: "Mahammadiyah Welfare Hub" (referred to in this document as MWH). 
+
+Our web-based minimart and voucher system solution for the Muhammadiyah Welfare Home involves a website: "Muhammadiyah Welfare Hub" (referred to in this document as MWH).
+	
 
 MWH was built on NextJS and Springboot, secured with Clerk and deployed on Vercel and Railway for demonstration.
-View the live app here: https://h4-g-submission.vercel.app/
-<br><br>
 
-# Login Page
+View the live app here: https://h4-g-submission.vercel.app/
+
+---
+
+### Instructions for Running the Project Locally
+
+### Frontend
+
+To run the frontend locally:
+
+1. Navigate to the `frontend` directory:
+
+```bash
+cd frontend
+```
+
+2. Start the development server:
+```bash
+npm run dev
+```
+
+3. Access your website at `localhost:3000`
+
+---
+
+### Backend
+
+To run the backend locally:
+
+1. Install Docker if you haven’t already. You can download Docker from [here](https://www.docker.com/products/docker-desktop).
+
+2. Navigate to the backend directory:
+```bash
+cd backend
+```
+
+3. Build the Docker Image:
+```bash
+docker build -t springboot-app .
+```
+
+4.  Run the Docker container:
+```bash
+docker run -p 8080:8000 springboot-app
+```
+
+---
+
+
+
+# Main Page
 MWH consists of 2 main login portals
+
+![Main Page](https://github.com/user-attachments/assets/1790271c-853d-43b4-bac0-ab24f435e113)
+
 1. Resident Login
 2. Admin Login
 
 Upon selection of either portal, user will be prompted to enter their **Username** and **Password**.
+
+![Resident Sign in Page](https://github.com/user-attachments/assets/82f11c95-9905-4ee5-b873-1a90344a57bd)
+
 
 ### 1. Sign Up Page
 * For new users, they will be able to sign up by clicking on the ***Sign Up*** hyperlink.
@@ -19,42 +75,83 @@ Upon selection of either portal, user will be prompted to enter their **Username
     2. Username
     3. Phone Number
     4. Password
+ 
+![Resident Sign up Page](https://github.com/user-attachments/assets/4ed9c9d6-c5a3-43d1-839c-e6057c0605bc)
+
 
 ### 2. Forgot Password
 * Redirects user to a landing page to enter a verification code sent to their phone number.
 * Upon verification, user will be able to set a new password for his account.
 
+![Forgot password](https://github.com/user-attachments/assets/90c42823-6a50-48cd-be10-dafe4f2be946)
+
+
 ### 3. Wrong Account Type
 If a resident tries to log into the admin account with their details, they will be prompted and redirected to the resident portal.
-<br><br>
 
-# Resident Login - Dashboard
+![Wrong Access](https://github.com/user-attachments/assets/5917e2a5-559f-4d21-9e6b-96d69dd129d2)
+
+### 4. User Profile
+In the topbar, if the user clicks on the avatar, they will have an option to change certain settings on their account.
+
+![User Profile](https://github.com/user-attachments/assets/7d4997dc-7aa3-4c71-b955-0c7d00b71bcc)
+
+
+![Edit User Profile](https://github.com/user-attachments/assets/b6ab2868-78e6-4510-9434-eba2263d163c)
+
+
+# Resident - Dashboard
 ### 1. Shop
 This tab leads to an e-mart page where products are listed.
 * Residents will be able to search for specific products in the search bar. 
 * Residents are able to select specific quantities for each product and add them to cart using the ***Add to Cart*** button.
 
+![Resident Shop](https://github.com/user-attachments/assets/af31a7e2-2c2a-4af8-aec4-18314db5aa2f)
+
+
+They have the option to add items into their cart to checkout, the shop inventory will also be updated in real time.
+
+
+![Cart](https://github.com/user-attachments/assets/040da73b-876d-4929-b837-e36a9f3e3c0e)
+
+
+
 ### 2. Tasks
 This tab displays all available tasks and their respective credits. 
-* Residents are able to view tasks in detail by clicking on ***View Task*** button, they can then choose to do the task by clicking on ***Accept Task***.
+* Residents are able to view tasks in detail by clicking on the task itself, they can then choose to do the task by clicking on ***Accept Task***.
+
+![Tasks](https://github.com/user-attachments/assets/3d57ef0c-8582-4aea-a93c-73f7d91b804a)
+
+
+![Task Details](https://github.com/user-attachments/assets/186e21b9-c1b9-4bc4-abf3-1a2a77ba62c3)
+
+
+![Task Joining](https://github.com/user-attachments/assets/0c631b88-7eb6-4a67-a1e9-a9a0dce46e93)
+
+
+
 
 ### 3. Transaction History
 This tab displays a navigable table past few transactions made by the resident.
-<br>
 
-|Transaction ID |     Date & Time    | Items | Total Amount |
-|:--------------|:-------------------|:------|:-------------|
-|TRX-000        |Jan 10, 2025, 2:30pm|3      | $70          |
+
+![Transaction](https://github.com/user-attachments/assets/78906b5c-311f-4686-b1d1-570bb21b0418)
+
 
 * Residents are able to view specific transaction breakdowns by clicking on it from the table.
 
 ### 4. Request Form
 This tab allows residents to fill in a form to request for items that are not already in the store.
 * Submitted requests will be reviewed by administrators.
-<br><br>
 
-# Resident Login - Home Page
+![Product Request](https://github.com/user-attachments/assets/659d7419-2461-44d9-b3f1-9e30bc611ab8)
+
+
+# Resident Dashboard - Home Page
 * Main landing page upon login.
+
+![Resident Dashboard](https://github.com/user-attachments/assets/95ee7b48-43ac-414b-896d-46b568eecfc0)
+
 
 ### 1. Your Balance
 * Displays remaining credits in the resident's account. 
@@ -64,19 +161,26 @@ This tab allows residents to fill in a form to request for items that are not al
 
 ### 2. New Tasks
 * A list of recently added/available tasks for the resident to accept and complete
-<br><br>
 
-# Admin Portal - Dashboard
+### 3. Recent Transactions
+* A list of recent transactions
+
+---
+
+
+# Admin Portal
+
+
 ### 1. Tasks
 * Displays all pending voucher credit approvals for residents who have recently completed their tasks.
+
+![Task Admin](https://github.com/user-attachments/assets/5da8817a-d067-489a-a328-6e65dc4ee2ab)
+
+  
 <br>
 
 * Admin will also be able to filter resident entries based on specific tasks in the search bar.
 <br>
-
-|Select  |Name           |     Date & Time    | Task          |Status  | Voucher Credits |
-|:-------|:--------------|:-------------------|:--------------|:-------|:----------------|
-|▢      |Joseph Tan     |Jan 10, 2025, 2:30pm|Room Cleaning  |Closed  |$15              |
 
 > **Select**
 <br> 
@@ -90,54 +194,119 @@ This tab allows residents to fill in a form to request for items that are not al
     - *Closed*: Resident has accepted task and marked his task as completed
 <br>
 
+* Admins are also able to create tasks via the "Create Task" Button
+
+![Create Task](https://github.com/user-attachments/assets/7e2973ab-6c05-4d73-bf29-18cba6f58961)
+
+* An admin can also moderate each task by clicking on it
+
+![task details admin](https://github.com/user-attachments/assets/84c5025e-0d6b-4d0c-8d6d-701c54df5ab0)
+
+
+
 ### 2. User Accounts
 * Displays all user accounts in a scrollable table for ease of visability.
+
+![User admin](https://github.com/user-attachments/assets/1e928d81-096e-4d32-bf24-d9fe46aee160)
+
 <br>
 * Admin is able to filter names in the search bar provided, making it easier for specific name searches in a large user database.
 <br>
 
-|Select  |User ID                         |Name           |Role     | Voucher Credits |Status  |     Created At    | Actions     |
-|:-------|:-------------------------------|:--------------|:--------|:----------------|:-------|:------------------|:------------|
-|▢      |user_2rclX5SvPlYywksjUM99BC2QXYg |Joseph Tan     |Resident |$15              |Active  |Jan 10, 2025, 2:30pm|...        |
-
-> **Select**
+**Select**
 <br> 
     - A check box admin is able to click and select one or multiple entries
     <br><br>
 
-> **Voucher Credits**
+**Voucher Credits**
 <br>
     - The user's current voucher balance
     <br><br>
 
-> **Status**
+**Status**
 <br>
     - Indicates if the user is ***Active*** or ***Suspended***
     <br><br>
 
-> **Actions**
+**Actions**
 <br>
     - *Edit User*: Allows the admin to remotely edit the resident's name, role, and voucher balance. This feature would be particularly useful for administrators to test the resident portal from their own accounts, settle voucher refunds when needed etc.
-    <br>
-    - *Reset Password*: Allows the admin to remotely reset the user's password when forgotten
-    <br>
-    - *Suspend User*: Allows the admin to remotely suspend the user when needed to prevent them from further accessing their account
-    <br><br>
+
+![Edit user option](https://github.com/user-attachments/assets/e83266f7-76e1-402f-910c-9e582267e5e5)
+
+<br>
+    - *Add User*: Allows the admin to remotely create a user. This feature would be useful to create more admins if so needed.
+
+![Add User](https://github.com/user-attachments/assets/c58188cf-8414-4718-8fc3-c7ebd29e629b)
+
+<br>
+    - *Suspend User*: Allows the admin to remotely suspend multiple users when needed to prevent them from further accessing their account
+
+![Suspend and delete option](https://github.com/user-attachments/assets/4316a28f-8f3d-4c5d-a84a-883ef5cd42e5)
+
+Users who are suspended will see the following:
+
+![Suspended](https://github.com/user-attachments/assets/69ca29f0-d334-4d14-93cf-e9cbe4f4c70d)
+
+
+<br><br>
 
 ### 3. Inventory
 * Allows the admin to view the current stock of different products in the MWH store.
-<br>
 
-|Select  |Product ID   |Name                       |Category           |Price    | Quantity      |Edit  |
-|:-------|:------------|:--------------------------|:------------------|:--------|:--------------|:-----|
-|▢      |1            |Instant Noodles (Pack of 5)|Groceries          |$3.99    |50             |✏️    |
+![Inventory](https://github.com/user-attachments/assets/b0af085c-d2ee-41e6-a3f5-72123e5d500f)
+
 <br>
 
 * New item button located at the top of the table for admin stuff to add products to the inventory.
 
-### 4. Reports
+**Actions**
+<br>
+    - *Delete Items*: Allows the admin to delete multiple items.
+    
+![inventory delete](https://github.com/user-attachments/assets/17508ed7-c604-4be0-a8b3-691eac8ecd4c)
+
+<br>
+
+- *Add Items*: Allows the admin to add items
+
+![add item](https://github.com/user-attachments/assets/78fccf00-edc6-4ec5-a1ba-4c27a255f280)
+
+<br>
+
+- *Edit Items*: Allows the admin to edit items in inventory, even the image.
+
+![edit item](https://github.com/user-attachments/assets/0d291ad0-9740-4411-83be-ff53597d9eb3)
+
+<br>
+
+
+### 4. Product Requests
+* Allows admins to manually review each item that the users requested
+
+![image](https://github.com/user-attachments/assets/6cfa9097-72a4-4e26-9dee-b37a3ed07634)
+
+
+<br>
+
+### 5. Reports
 * Allows admin to generate reports of the weekly stock movement of all products in the inventory.
     * Aids the admin in doing stock analysis, including spotting products that meet higher demand, predicting products that are be low in stock soon etc.
+
+![Reports](https://github.com/user-attachments/assets/a158c996-1898-4549-b785-6ae101b758d0)
+
+
+* There are 5 types of reports
+    - **Audit Log Reports**: View all product related actions and changes.
+    - **Product Request Report**: View all product requests from residents.
+    - **Preorder Report**: View all product preorders and their status.
+    - **Transaction Report**: View all transactions and revenue.
+ 
+Here is an example report generated:
+
+![Example report](https://github.com/user-attachments/assets/2326aaa0-1c00-4553-afac-d472aa419cc8)
+
+
 <br><br>
 
 # Admin Portal - Home Page
