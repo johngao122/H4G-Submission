@@ -186,14 +186,14 @@ const AdminDashboard = () => {
                         />
                         <QuickAction
                             icon={ClipboardList}
-                            title="Manage Tasks"
+                            title="Add new task"
                             onClick={() =>
                                 router.push("/admin/dashboard/tasks/createTask")
                             }
                         />
                         <QuickAction
                             icon={BarChart3}
-                            title="Reports"
+                            title="Generate a report"
                             onClick={() =>
                                 router.push("/admin/dashboard/reports")
                             }
