@@ -44,7 +44,7 @@ const TopBarAdmin = () => {
                                     <Image src={logo} alt="logo" />
                                 </div>
                                 <span className="ml-2 text-lg font-semibold text-gray-900">
-                                    MWH Minimart
+                                    MWH Admin Portal
                                 </span>
                             </a>
                         </div>
