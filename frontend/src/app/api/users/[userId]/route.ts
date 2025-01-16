@@ -107,7 +107,7 @@ export async function PATCH(
 
 export async function DELETE(
     req: Request,
-    { params }: { params: { userId: string } }
+    { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
         const clerk = await clerkClient();
