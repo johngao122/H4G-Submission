@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import TopBarAdmin from "@/components/topbarAdmin";
 
 interface UserData {
     id: string;
@@ -68,13 +69,11 @@ export default function EditUserPage() {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                // Fetch from Clerk
                 const clerkResponse = await fetch(`/api/users/${userId}`);
                 if (!clerkResponse.ok)
                     throw new Error("Failed to fetch user from Clerk");
                 const clerkData = await clerkResponse.json();
 
-                // Fetch from database
                 const dbResponse = await fetch(
                     `${process.env.NEXT_PUBLIC_API}/users/${userId}`
                 );
@@ -117,7 +116,6 @@ export default function EditUserPage() {
         setIsSaving(true);
 
         try {
-            // Update Clerk metadata
             const metadataResponse = await fetch("/api/users", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
@@ -139,7 +137,6 @@ export default function EditUserPage() {
                 throw new Error("Failed to update user metadata in Clerk");
             }
 
-            // Update Clerk user info
             const userUpdateResponse = await fetch(`/api/users/${userId}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
@@ -156,7 +153,6 @@ export default function EditUserPage() {
                 throw new Error("Failed to update user information in Clerk");
             }
 
-            // Update database
             const dbUpdateResponse = await fetch(
                 `${process.env.NEXT_PUBLIC_API}/users/${userId}`,
                 {
@@ -211,173 +207,180 @@ export default function EditUserPage() {
 
     return (
         <div className="container mx-auto py-10 px-4">
-            <Card className="max-w-2xl mx-auto">
-                <CardHeader>
-                    <CardTitle>Edit User</CardTitle>
-                    <CardDescription>
-                        Update user information and account settings
-                    </CardDescription>
-                </CardHeader>
-                <form onSubmit={handleSubmit}>
-                    <CardContent className="space-y-6">
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+            <TopBarAdmin />
+            <main>
+                <Card className="max-w-2xl mx-auto">
+                    <CardHeader>
+                        <CardTitle>Edit User</CardTitle>
+                        <CardDescription>
+                            Update user information and account settings
+                        </CardDescription>
+                    </CardHeader>
+                    <form onSubmit={handleSubmit}>
+                        <CardContent className="space-y-6">
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="firstName">
+                                            First Name
+                                        </Label>
+                                        <Input
+                                            id="firstName"
+                                            value={formData.firstName}
+                                            onChange={(e) =>
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    firstName: e.target.value,
+                                                }))
+                                            }
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="lastName">
+                                            Last Name
+                                        </Label>
+                                        <Input
+                                            id="lastName"
+                                            value={formData.lastName}
+                                            onChange={(e) =>
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    lastName: e.target.value,
+                                                }))
+                                            }
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className="space-y-2">
-                                    <Label htmlFor="firstName">
-                                        First Name
-                                    </Label>
+                                    <Label htmlFor="username">Username</Label>
                                     <Input
-                                        id="firstName"
-                                        value={formData.firstName}
+                                        id="username"
+                                        value={formData.username}
                                         onChange={(e) =>
                                             setFormData((prev) => ({
                                                 ...prev,
-                                                firstName: e.target.value,
+                                                username: e.target.value,
                                             }))
                                         }
                                         required
                                     />
                                 </div>
+
                                 <div className="space-y-2">
-                                    <Label htmlFor="lastName">Last Name</Label>
-                                    <Input
-                                        id="lastName"
-                                        value={formData.lastName}
-                                        onChange={(e) =>
-                                            setFormData((prev) => ({
-                                                ...prev,
-                                                lastName: e.target.value,
-                                            }))
-                                        }
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="username">Username</Label>
-                                <Input
-                                    id="username"
-                                    value={formData.username}
-                                    onChange={(e) =>
-                                        setFormData((prev) => ({
-                                            ...prev,
-                                            username: e.target.value,
-                                        }))
-                                    }
-                                    required
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="password">
-                                    New Password (leave blank to keep current)
-                                </Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    value={formData.password}
-                                    onChange={(e) =>
-                                        setFormData((prev) => ({
-                                            ...prev,
-                                            password: e.target.value,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="phoneNumber">
-                                    Phone Number
-                                </Label>
-                                <Input
-                                    id="phoneNumber"
-                                    value={formData.phoneNumber}
-                                    disabled
-                                    className="bg-gray-50"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="role">Role</Label>
-                                <Select
-                                    value={formData.role}
-                                    onValueChange={(value) =>
-                                        setFormData((prev) => ({
-                                            ...prev,
-                                            role: value,
-                                        }))
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select role" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="admin">
-                                            Admin
-                                        </SelectItem>
-                                        <SelectItem value="resident">
-                                            Resident
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {formData.role === "resident" && (
-                                <div className="space-y-2">
-                                    <Label htmlFor="voucherBalance">
-                                        Voucher Balance
+                                    <Label htmlFor="password">
+                                        New Password (leave blank to keep
+                                        current)
                                     </Label>
                                     <Input
-                                        id="voucherBalance"
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.voucherBalance}
+                                        id="password"
+                                        type="password"
+                                        value={formData.password}
                                         onChange={(e) =>
                                             setFormData((prev) => ({
                                                 ...prev,
-                                                voucherBalance: e.target.value,
+                                                password: e.target.value,
                                             }))
                                         }
                                     />
                                 </div>
-                            )}
 
-                            <div className="flex items-center space-x-2">
-                                <Switch
-                                    id="suspended"
-                                    checked={formData.suspended}
-                                    onCheckedChange={(checked) =>
-                                        setFormData((prev) => ({
-                                            ...prev,
-                                            suspended: checked,
-                                        }))
-                                    }
-                                />
-                                <Label htmlFor="suspended">
-                                    Account Suspended
-                                </Label>
+                                <div className="space-y-2">
+                                    <Label htmlFor="phoneNumber">
+                                        Phone Number
+                                    </Label>
+                                    <Input
+                                        id="phoneNumber"
+                                        value={formData.phoneNumber}
+                                        disabled
+                                        className="bg-gray-50"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="role">Role</Label>
+                                    <Select
+                                        value={formData.role}
+                                        onValueChange={(value) =>
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                role: value,
+                                            }))
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select role" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="admin">
+                                                Admin
+                                            </SelectItem>
+                                            <SelectItem value="resident">
+                                                Resident
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {formData.role === "resident" && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="voucherBalance">
+                                            Voucher Balance
+                                        </Label>
+                                        <Input
+                                            id="voucherBalance"
+                                            type="number"
+                                            step="0.01"
+                                            value={formData.voucherBalance}
+                                            onChange={(e) =>
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    voucherBalance:
+                                                        e.target.value,
+                                                }))
+                                            }
+                                        />
+                                    </div>
+                                )}
+
+                                <div className="flex items-center space-x-2">
+                                    <Switch
+                                        id="suspended"
+                                        checked={formData.suspended}
+                                        onCheckedChange={(checked) =>
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                suspended: checked,
+                                            }))
+                                        }
+                                    />
+                                    <Label htmlFor="suspended">
+                                        Account Suspended
+                                    </Label>
+                                </div>
                             </div>
-                        </div>
-                    </CardContent>
-                    <CardFooter className="flex justify-between">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => router.back()}
-                            disabled={isSaving}
-                        >
-                            Cancel
-                        </Button>
-                        <Button type="submit" disabled={isSaving}>
-                            {isSaving && (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            )}
-                            {isSaving ? "Saving..." : "Save Changes"}
-                        </Button>
-                    </CardFooter>
-                </form>
-            </Card>
+                        </CardContent>
+                        <CardFooter className="flex justify-between">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => router.back()}
+                                disabled={isSaving}
+                            >
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={isSaving}>
+                                {isSaving && (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                )}
+                                {isSaving ? "Saving..." : "Save Changes"}
+                            </Button>
+                        </CardFooter>
+                    </form>
+                </Card>
+            </main>
         </div>
     );
 }
