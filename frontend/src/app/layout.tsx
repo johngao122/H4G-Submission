@@ -22,3 +22,7 @@ export default function RootLayout({
         </html>
     );
 }
+
+export const metadata = {
+    title: "Muhammadiyah Welfare Hub",
+};
