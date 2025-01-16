@@ -9,64 +9,132 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 
-const SAMPLE_INVENTORY_ALERTS = [
-    //Replace with API implementation
-    {
-        id: 1,
-        item: "Toiletries Pack",
-        status: "Low Stock",
-        quantity: 5,
-        date: "2025-01-12 14:30",
-    },
-    {
-        id: 2,
-        item: "School Supplies Set",
-        status: "Out of Stock",
-        quantity: 0,
-        date: "2025-01-11 09:15",
-    },
-    {
-        id: 3,
-        item: "Snack Pack",
-        status: "Low Stock",
-        quantity: 8,
-        date: "2025-01-10 16:45",
-    },
-];
+interface Product {
+    productId: string;
+    name: string;
+    category: string;
+    desc: string;
+    price: number;
+    quantity: number;
+    productPhoto: string;
+}
 
-const SAMPLE_RECENT_ACTIVITIES = [
-    //This is for audit logs
-    //Replace with API implementation
-    {
-        id: 1,
-        description: "New task created: Room Cleaning",
-        type: "task",
-        date: "2025-01-12 14:30",
-    },
-    {
-        id: 2,
-        description: "User John D. completed purchase",
-        type: "purchase",
-        date: "2025-01-11 09:15",
-    },
-    {
-        id: 3,
-        description: "Inventory updated: Stationery Set",
-        type: "inventory",
-        date: "2025-01-10 16:45",
-    },
-];
+interface ProductLog {
+    logId: string;
+    userId: string;
+    productId: string;
+    datetime: string;
+    action: string;
+}
+
+interface InventoryAlert {
+    id: string;
+    item: string;
+    status: "Low Stock" | "Out of Stock";
+    quantity: number;
+    date: string;
+}
+
+interface Activity {
+    id: string;
+    description: string;
+    type: string;
+    date: string;
+}
 
 const AdminDashboard = () => {
     const router = useRouter();
     const { isSignedIn, user, isLoaded } = useUser();
     const { isAuthorized, isChecking, AccessDenied } = useAdminAuth();
+    const [inventoryAlerts, setInventoryAlerts] = useState<InventoryAlert[]>(
+        []
+    );
+    const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const formatActionDescription = (log: ProductLog): string => {
+        if (log.action === "DELETE") {
+            return "Product deleted from inventory";
+        }
+
+        if (log.action.startsWith("UPDATE:")) {
+            const match = log.action.match(/name=(.*?),.*quantity=(\d+)/);
+            if (match) {
+                const [_, productName, quantity] = match;
+                return `Updated quantity for ${productName} to ${quantity}`;
+            }
+            return "Product updated in inventory";
+        }
+
+        if (log.action.startsWith("CREATE:")) {
+            const match = log.action.match(/name=(.*?),/);
+            if (match) {
+                return `New product added: ${match[1]}`;
+            }
+            return "New product added to inventory";
+        }
+
+        return "Inventory action performed";
+    };
+
+    const fetchData = async () => {
+        try {
+            const productsResponse = await fetch(
+                `${process.env.NEXT_PUBLIC_API}/products`
+            );
+            if (!productsResponse.ok)
+                throw new Error("Failed to fetch products");
+            const products: Product[] = await productsResponse.json();
+
+            const alerts: InventoryAlert[] = products
+                .filter((product) => product.quantity < 10)
+                .map((product) => ({
+                    id: product.productId,
+                    item: product.name,
+                    status:
+                        product.quantity === 0 ? "Out of Stock" : "Low Stock",
+                    quantity: product.quantity,
+                    date: new Date().toISOString(),
+                }));
+
+            const logsResponse = await fetch(
+                `${process.env.NEXT_PUBLIC_API}/product-logs`
+            );
+            if (!logsResponse.ok)
+                throw new Error("Failed to fetch product logs");
+            const logs: ProductLog[] = await logsResponse.json();
+
+            const activities: Activity[] = logs.slice(0, 10).map((log) => ({
+                id: log.logId,
+                description: formatActionDescription(log),
+                type: "inventory",
+                date: new Date(log.datetime).toLocaleString(),
+            }));
+
+            setInventoryAlerts(alerts);
+            setRecentActivities(activities);
+            setError(null);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "An error occurred");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (isLoaded && !user) {
             router.push("/admin/login");
+            return;
         }
-    }, [isLoaded, user, router]);
+
+        if (isAuthorized) {
+            fetchData();
+
+            const interval = setInterval(fetchData, 300000);
+            return () => clearInterval(interval);
+        }
+    }, [isLoaded, user, isAuthorized]);
 
     if (!isLoaded || isChecking) {
         return (
@@ -144,9 +212,21 @@ const AdminDashboard = () => {
                             </CardHeader>
                             <ScrollArea className="h-[300px] w-full">
                                 <CardContent>
-                                    <div className="space-y-4">
-                                        {SAMPLE_INVENTORY_ALERTS.map(
-                                            (alert) => (
+                                    {loading ? (
+                                        <p className="text-center py-4">
+                                            Loading...
+                                        </p>
+                                    ) : error ? (
+                                        <p className="text-center text-red-500 py-4">
+                                            {error}
+                                        </p>
+                                    ) : inventoryAlerts.length === 0 ? (
+                                        <p className="text-center py-4">
+                                            No inventory alerts
+                                        </p>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {inventoryAlerts.map((alert) => (
                                                 <div
                                                     key={alert.id}
                                                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -171,9 +251,9 @@ const AdminDashboard = () => {
                                                         {alert.status}
                                                     </span>
                                                 </div>
-                                            )
-                                        )}
-                                    </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </CardContent>
                             </ScrollArea>
                         </Card>
@@ -185,49 +265,53 @@ const AdminDashboard = () => {
                         </h2>
                         <Card>
                             <CardHeader>
-                                <CardTitle>System Activities</CardTitle>
+                                <CardTitle>Inventory Activities</CardTitle>
                             </CardHeader>
                             <ScrollArea className="h-[300px] w-full">
                                 <CardContent>
-                                    <div className="space-y-4">
-                                        {SAMPLE_RECENT_ACTIVITIES.map(
-                                            (activity) => (
-                                                <div
-                                                    key={activity.id}
-                                                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                                                >
-                                                    <div>
-                                                        <p className="font-medium text-gray-900">
-                                                            {
-                                                                activity.description
-                                                            }
-                                                        </p>
-                                                        <p className="text-sm text-gray-500">
-                                                            {activity.date}
-                                                        </p>
-                                                    </div>
-                                                    <span
-                                                        className={`px-2 py-1 rounded ${
-                                                            activity.type ===
-                                                            "task"
-                                                                ? "bg-blue-100 text-blue-800"
-                                                                : activity.type ===
-                                                                  "purchase"
-                                                                ? "bg-green-100 text-green-800"
-                                                                : "bg-purple-100 text-purple-800"
-                                                        }`}
+                                    {loading ? (
+                                        <p className="text-center py-4">
+                                            Loading...
+                                        </p>
+                                    ) : error ? (
+                                        <p className="text-center text-red-500 py-4">
+                                            {error}
+                                        </p>
+                                    ) : recentActivities.length === 0 ? (
+                                        <p className="text-center py-4">
+                                            No recent activities
+                                        </p>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {recentActivities.map(
+                                                (activity) => (
+                                                    <div
+                                                        key={activity.id}
+                                                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                                                     >
-                                                        {activity.type
-                                                            .charAt(0)
-                                                            .toUpperCase() +
-                                                            activity.type.slice(
-                                                                1
-                                                            )}
-                                                    </span>
-                                                </div>
-                                            )
-                                        )}
-                                    </div>
+                                                        <div>
+                                                            <p className="font-medium text-gray-900">
+                                                                {
+                                                                    activity.description
+                                                                }
+                                                            </p>
+                                                            <p className="text-sm text-gray-500">
+                                                                {activity.date}
+                                                            </p>
+                                                        </div>
+                                                        <span className="px-2 py-1 rounded bg-purple-100 text-purple-800">
+                                                            {activity.type
+                                                                .charAt(0)
+                                                                .toUpperCase() +
+                                                                activity.type.slice(
+                                                                    1
+                                                                )}
+                                                        </span>
+                                                    </div>
+                                                )
+                                            )}
+                                        </div>
+                                    )}
                                 </CardContent>
                             </ScrollArea>
                         </Card>

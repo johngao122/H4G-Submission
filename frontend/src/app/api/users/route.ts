@@ -164,10 +164,10 @@ export async function POST(request: Request) {
                 { status: 401 }
             );
         }
-
+        console.log("Creating clerk user...");
         const data = await request.json();
         const { name, phoneNumber, username, password, role } = data;
-
+        console.log("Clerk role", role);
         const client = await clerkClient();
 
         const nameParts = name.split(" ");
@@ -179,6 +179,10 @@ export async function POST(request: Request) {
             ...(role === "resident" && { voucherBalance: 0 }),
         };
 
+        const unsafeMetadata = {
+            signUpRoute: role,
+        };
+
         const user = await client.users.createUser({
             username,
             password,
@@ -186,9 +190,12 @@ export async function POST(request: Request) {
             lastName,
             phoneNumber: [phoneNumber],
             publicMetadata,
+            unsafeMetadata,
             skipPasswordChecks: true,
             skipPasswordRequirement: true,
         });
+
+        console.log("Created clerk user:", user);
 
         return NextResponse.json({
             message: "User created",

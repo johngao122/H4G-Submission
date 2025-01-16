@@ -23,6 +23,12 @@ interface CreateTaskForm {
     reward: string;
 }
 
+interface APIResponse {
+    success: boolean;
+    message?: string;
+    error?: string;
+}
+
 const CreateTaskPage = () => {
     const router = useRouter();
     const { toast } = useToast();
@@ -50,16 +56,28 @@ const CreateTaskPage = () => {
                 throw new Error("Reward must be greater than 0");
             }
 
-            const newTask: Partial<Task> = {
-                name: formData.name,
-                description: formData.description,
-                reward: reward,
-                status: "OPEN",
-                contributors: [],
+            const requestBody = {
+                taskName: formData.name.trim(),
+                taskDesc: formData.description.trim(),
+                taskReward: reward,
             };
 
-            // TODO: Replace with actual API call
-            console.log("Creating new task:", newTask);
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API}/tasks`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(requestBody),
+                }
+            );
+
+            const data: APIResponse = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to create task");
+            }
 
             toast({
                 title: "Success",

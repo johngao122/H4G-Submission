@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import {
-    Column,
     ColumnDef,
     ColumnFiltersState,
     Row,
@@ -16,9 +15,9 @@ import {
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table";
-import { Card, CardContent } from "./ui/card";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
     Table,
     TableBody,
@@ -57,8 +56,17 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { User } from "@/app/types/user";
 import { useRouter } from "next/navigation";
+
+const API_BASE = process.env.NEXT_PUBLIC_API;
+
+interface User {
+    userId: string;
+    name: string;
+    voucherBal: number;
+    role: string;
+    status: string;
+}
 
 interface ResponsiveHeaderProps {
     table: TableType<User>;
@@ -212,7 +220,7 @@ const ResponsiveHeader: React.FC<ResponsiveHeaderProps> = ({
                             disabled={isLoading}
                             onClick={() => {
                                 const selectedUsers = selectedRows.map(
-                                    (row) => row.original.id
+                                    (row) => row.original.userId
                                 );
                                 const userName =
                                     selectedRows.length === 1
@@ -240,7 +248,7 @@ const ResponsiveHeader: React.FC<ResponsiveHeaderProps> = ({
                             disabled={isLoading}
                             onClick={() => {
                                 const selectedUsers = selectedRows.map(
-                                    (row) => row.original.id
+                                    (row) => row.original.userId
                                 );
                                 const userName =
                                     selectedRows.length === 1
@@ -267,7 +275,7 @@ const ResponsiveHeader: React.FC<ResponsiveHeaderProps> = ({
                         disabled={isLoading || selectedRows.length === 0}
                         onClick={() => {
                             const selectedIds = selectedRows.map(
-                                (row) => row.original.id
+                                (row) => row.original.userId
                             );
                             onOpenDeleteDialog(selectedIds);
                         }}
@@ -352,7 +360,7 @@ const MobileCardView: React.FC<MobileCardViewProps> = ({
                                         {row.getValue("name")}
                                     </p>
                                     <p className="text-sm text-gray-500">
-                                        {row.getValue("id")}
+                                        {row.getValue("userId")}
                                     </p>
                                 </div>
                             </div>
@@ -377,32 +385,25 @@ const MobileCardView: React.FC<MobileCardViewProps> = ({
                                     <DropdownMenuItem
                                         onClick={() => {
                                             router.push(
-                                                "/users/" + row.getValue("id")
+                                                `/admin/dashboard/users/${row.getValue(
+                                                    "userId"
+                                                )}`
                                             );
                                         }}
                                         disabled={isLoading}
                                     >
                                         Edit User
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={() => {
-                                            /* Handle password reset */
-                                        }}
-                                        disabled={isLoading}
-                                    >
-                                        Reset Password
-                                    </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
 
-                        {/* User Details */}
                         <div className="space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-500">Role:</span>
                                 <Badge
                                     variant={
-                                        row.getValue("role") === "admin"
+                                        row.getValue("role") === "ADMIN"
                                             ? "default"
                                             : "secondary"
                                     }
@@ -425,19 +426,7 @@ const MobileCardView: React.FC<MobileCardViewProps> = ({
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-500">Balance:</span>
                                 <span>
-                                    {row.original.role === "admin"
-                                        ? "N/A"
-                                        : `$${row.original.voucherBalance.toFixed(
-                                              2
-                                          )}`}
-                                </span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500">Created:</span>
-                                <span>
-                                    {new Date(
-                                        row.getValue("createdAt")
-                                    ).toLocaleDateString()}
+                                    ${row.original.voucherBal.toFixed(2)}
                                 </span>
                             </div>
                         </div>
@@ -508,12 +497,13 @@ export function UserManagementDataTable() {
 
     const fetchUsers = async () => {
         try {
-            const response = await fetch("/api/users");
-            const data = await response.json();
-            if (data.error) {
-                throw new Error(data.error);
+            setIsLoading(true);
+            const response = await fetch(`${API_BASE}/users`);
+            if (!response.ok) {
+                throw new Error("Failed to fetch users");
             }
-            setUsers(data.users);
+            const data = await response.json();
+            setUsers(data);
         } catch (error) {
             toast({
                 title: "Error",
@@ -529,25 +519,26 @@ export function UserManagementDataTable() {
         fetchUsers();
     }, []);
 
-    const handleUpdateUser = async (
-        userId: string,
-        action: string,
-        data?: any
-    ) => {
+    const handleUpdateUser = async (userId: string, action: string) => {
         setIsLoading(true);
         try {
-            const response = await fetch("/api/users", {
-                method: "PATCH",
+            const user = users.find((u) => u.userId === userId);
+            if (!user) throw new Error("User not found");
+
+            const updatedUser = {
+                ...user,
+                status: action === "SUSPEND" ? "SUSPENDED" : "ACTIVE",
+            };
+
+            const response = await fetch(`${API_BASE}/users/${userId}`, {
+                method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ userId, action, data }),
+                body: JSON.stringify(updatedUser),
             });
 
-            const result = await response.json();
-            if (result.error) {
-                throw new Error(result.error);
-            }
+            if (!response.ok) throw new Error("Failed to update user");
 
             toast({
                 title: "Success",
@@ -566,32 +557,13 @@ export function UserManagementDataTable() {
         }
     };
 
-    const handleBulkAction = async (action: string) => {
-        const selectedUsers = table.getFilteredSelectedRowModel().rows;
-
-        try {
-            await Promise.all(
-                selectedUsers.map((row) =>
-                    handleUpdateUser(row.original.id, action)
-                )
-            );
-            setRowSelection({});
-        } catch (error) {
-            console.error(`Bulk ${action} failed:`, error);
-        }
-    };
-
     const handleDeleteUsers = async (userIds: string[]) => {
         setIsLoading(true);
         try {
             await Promise.all(
                 userIds.map((userId) =>
-                    fetch("/api/users", {
+                    fetch(`${API_BASE}/users/${userId}`, {
                         method: "DELETE",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ userId }),
                     })
                 )
             );
@@ -643,11 +615,11 @@ export function UserManagementDataTable() {
             enableHiding: false,
         },
         {
-            accessorKey: "id",
+            accessorKey: "userId",
             header: ({ column }) => <div className="text-left">UID</div>,
             cell: ({ row }) => (
                 <div className="text-left font-medium">
-                    {row.getValue("id")}
+                    {row.getValue("userId")}
                 </div>
             ),
         },
@@ -682,7 +654,7 @@ export function UserManagementDataTable() {
                 <div className="text-left">
                     <Badge
                         variant={
-                            row.getValue("role") === "admin"
+                            row.getValue("role") === "ADMIN"
                                 ? "default"
                                 : "secondary"
                         }
@@ -693,7 +665,7 @@ export function UserManagementDataTable() {
             ),
         },
         {
-            accessorKey: "voucherBalance",
+            accessorKey: "voucherBal",
             header: ({ column }) => {
                 return (
                     <div className="text-left">
@@ -712,16 +684,11 @@ export function UserManagementDataTable() {
                     </div>
                 );
             },
-            cell: ({ row }) => {
-                const user = row.original;
-                return (
-                    <div className="text-left">
-                        {user.role === "admin"
-                            ? "N/A"
-                            : `$${user.voucherBalance.toFixed(2)}`}
-                    </div>
-                );
-            },
+            cell: ({ row }) => (
+                <div className="text-left">
+                    ${row.getValue<number>("voucherBal").toFixed(2)}
+                </div>
+            ),
         },
         {
             accessorKey: "status",
@@ -737,32 +704,6 @@ export function UserManagementDataTable() {
                     >
                         {row.getValue("status")}
                     </Badge>
-                </div>
-            ),
-        },
-        {
-            accessorKey: "createdAt",
-            header: ({ column }) => {
-                return (
-                    <div className="text-left">
-                        <Button
-                            variant="ghost"
-                            onClick={() =>
-                                column.toggleSorting(
-                                    column.getIsSorted() === "asc"
-                                )
-                            }
-                            className="p-0 hover:bg-transparent"
-                        >
-                            Created At
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
-                        </Button>
-                    </div>
-                );
-            },
-            cell: ({ row }) => (
-                <div className="text-left">
-                    {new Date(row.getValue("createdAt")).toLocaleDateString()}
                 </div>
             ),
         },
@@ -790,20 +731,12 @@ export function UserManagementDataTable() {
                                 <DropdownMenuItem
                                     onClick={() => {
                                         router.push(
-                                            `/admin/dashboard/users/${user.id}`
+                                            `/admin/dashboard/users/${user.userId}`
                                         );
                                     }}
                                     disabled={isLoading}
                                 >
                                     Edit User
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() => {
-                                        /* Handle password reset */
-                                    }}
-                                    disabled={isLoading}
-                                >
-                                    Reset Password
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>

@@ -13,90 +13,107 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import type { UserFormData } from "@/app/types/user";
+
+interface FormData {
+    name: string;
+    phoneNumber: string;
+    username: string;
+    password: string;
+    role: "admin" | "resident";
+    voucherBal: number;
+}
 
 const AddUserForm = () => {
     const { toast } = useToast();
+    const router = useRouter();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const [formData, setFormData] = React.useState<UserFormData>({
+    const [formData, setFormData] = React.useState<FormData>({
         name: "",
         phoneNumber: "",
         username: "",
         password: "",
         role: "resident",
+        voucherBal: 0,
     });
-    const router = useRouter();
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({
             ...prev,
-            [name]: value,
+            [name]: name === "voucherBal" ? parseFloat(value) || 0 : value,
         }));
     };
 
-    const handleRoleChange = (value: "resident" | "admin") => {
+    const handleRoleChange = (value: "admin" | "resident") => {
         setFormData((prev) => ({
             ...prev,
             role: value,
         }));
+        console.log(formData);
+    };
+
+    const validateForm = (): boolean => {
+        if (!formData.name.trim()) {
+            toast({
+                title: "Error",
+                description: "Please enter a name",
+                variant: "destructive",
+            });
+            return false;
+        }
+
+        const usernameRegex = /^[a-zA-Z0-9_]+$/;
+        if (!usernameRegex.test(formData.username)) {
+            toast({
+                title: "Error",
+                description:
+                    "Username can only contain letters, numbers, and underscores",
+                variant: "destructive",
+            });
+            return false;
+        }
+
+        const phoneRegex = /^\+65[689]\d{7}$/;
+        if (!phoneRegex.test(formData.phoneNumber)) {
+            toast({
+                title: "Error",
+                description:
+                    "Please enter a valid Singapore phone number (+658XXXXXXX or +659XXXXXXX)",
+                variant: "destructive",
+            });
+            return false;
+        }
+
+        if (formData.password.length < 8) {
+            toast({
+                title: "Error",
+                description: "Password must be at least 8 characters long",
+                variant: "destructive",
+            });
+            return false;
+        }
+
+        if (formData.role === "resident" && formData.voucherBal < 0) {
+            toast({
+                title: "Error",
+                description: "Voucher balance cannot be negative",
+                variant: "destructive",
+            });
+            return false;
+        }
+
+        return true;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!validateForm()) return;
+
         setIsSubmitting(true);
 
         try {
-            if (
-                !formData.name.trim() ||
-                !formData.phoneNumber.trim() ||
-                !formData.password.trim() ||
-                !formData.username.trim()
-            ) {
-                toast({
-                    title: "Error",
-                    description: "Please fill in all required fields",
-                    variant: "destructive",
-                });
-                setIsSubmitting(false);
-                return;
-            }
-
-            const usernameRegex = /^[a-zA-Z0-9_]+$/;
-            if (!usernameRegex.test(formData.username)) {
-                toast({
-                    title: "Error",
-                    description:
-                        "Username can only contain letters, numbers, and underscores",
-                    variant: "destructive",
-                });
-                setIsSubmitting(false);
-                return;
-            }
-
-            const phoneRegex = /^\+65[689]\d{7}$/;
-            if (!phoneRegex.test(formData.phoneNumber)) {
-                toast({
-                    title: "Error",
-                    description:
-                        "Please enter a valid Singapore phone number (+658XXXXXXX or +659XXXXXXX)",
-                    variant: "destructive",
-                });
-                setIsSubmitting(false);
-                return;
-            }
-
-            if (formData.password.length < 8) {
-                toast({
-                    title: "Error",
-                    description: "Password must be at least 8 characters long",
-                    variant: "destructive",
-                });
-                setIsSubmitting(false);
-                return;
-            }
-
-            const response = await fetch("/api/users", {
+            console.log(formData);
+            const clerkResponse = await fetch("/api/users", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -104,17 +121,19 @@ const AddUserForm = () => {
                 body: JSON.stringify(formData),
             });
 
-            const data = await response.json();
+            const clerkData = await clerkResponse.json();
 
-            if (!response.ok) {
-                throw new Error(data.error || "Failed to create user");
+            if (!clerkResponse.ok) {
+                throw new Error(
+                    clerkData.error || "Failed to create user in Clerk"
+                );
             }
 
             toast({
                 title: "Success",
                 description: `User has been created successfully${
                     formData.role === "resident"
-                        ? " with 0 voucher balance"
+                        ? ` with ${formData.voucherBal} voucher balance`
                         : ""
                 }`,
             });
@@ -125,6 +144,7 @@ const AddUserForm = () => {
                 username: "",
                 password: "",
                 role: "resident",
+                voucherBal: 0,
             });
 
             router.push("/admin/dashboard/users");
@@ -250,6 +270,28 @@ const AddUserForm = () => {
                                 </SelectContent>
                             </Select>
                         </div>
+
+                        {formData.role === "resident" && (
+                            <div className="space-y-2">
+                                <label
+                                    htmlFor="voucherBal"
+                                    className="text-sm font-medium text-gray-700"
+                                >
+                                    Initial Voucher Balance
+                                </label>
+                                <Input
+                                    id="voucherBal"
+                                    name="voucherBal"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={formData.voucherBal}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter initial voucher balance"
+                                    className="w-full"
+                                />
+                            </div>
+                        )}
 
                         <Button
                             type="submit"

@@ -31,10 +31,18 @@ interface UserData {
     lastName: string;
     phoneNumbers: string[];
     publicMetadata: {
-        role: "Admin" | "Resident";
+        role: "admin" | "resident";
         voucherBalance?: number;
         suspended?: boolean;
     };
+}
+
+interface DatabaseUserData {
+    userId: string;
+    name: string;
+    role: string;
+    voucherBal: number;
+    status: string;
 }
 
 export default function EditUserPage() {
@@ -43,8 +51,9 @@ export default function EditUserPage() {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
-
     const [userData, setUserData] = useState<UserData | null>(null);
+    const [dbUserData, setDbUserData] = useState<DatabaseUserData | null>(null);
+
     const [formData, setFormData] = useState({
         username: "",
         password: "",
@@ -59,23 +68,35 @@ export default function EditUserPage() {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const response = await fetch(`/api/users/${userId}`);
-                if (!response.ok) throw new Error("Failed to fetch user");
-                const data = await response.json();
+                // Fetch from Clerk
+                const clerkResponse = await fetch(`/api/users/${userId}`);
+                if (!clerkResponse.ok)
+                    throw new Error("Failed to fetch user from Clerk");
+                const clerkData = await clerkResponse.json();
 
-                setUserData(data);
+                // Fetch from database
+                const dbResponse = await fetch(
+                    `${process.env.NEXT_PUBLIC_API}/users/${userId}`
+                );
+                if (!dbResponse.ok)
+                    throw new Error("Failed to fetch user from database");
+                const dbData = await dbResponse.json();
+
+                setUserData(clerkData);
+                setDbUserData(dbData);
+
                 setFormData({
-                    username: data.username || "",
+                    username: clerkData.username || "",
                     password: "",
-                    firstName: data.firstName || "",
-                    lastName: data.lastName || "",
-                    phoneNumber: data.phoneNumbers?.[0] || "",
-                    role: data.publicMetadata.role || "resident",
-                    voucherBalance:
-                        data.publicMetadata.voucherBalance?.toString() || "0",
-                    suspended: data.publicMetadata.suspended || false,
+                    firstName: clerkData.firstName || "",
+                    lastName: clerkData.lastName || "",
+                    phoneNumber: clerkData.phoneNumbers?.[0] || "",
+                    role: dbData.role.toLowerCase() || "resident",
+                    voucherBalance: dbData.voucherBal?.toString() || "0",
+                    suspended: clerkData.publicMetadata.suspended || false,
                 });
             } catch (error) {
+                console.error("Error fetching user:", error);
                 toast({
                     title: "Error",
                     description: "Failed to fetch user data",
@@ -96,6 +117,7 @@ export default function EditUserPage() {
         setIsSaving(true);
 
         try {
+            // Update Clerk metadata
             const metadataResponse = await fetch("/api/users", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
@@ -106,7 +128,7 @@ export default function EditUserPage() {
                         role: formData.role,
                         suspended: formData.suspended,
                         voucherBalance:
-                            formData.role === "Resident"
+                            formData.role === "resident"
                                 ? parseFloat(formData.voucherBalance)
                                 : 0,
                     },
@@ -114,9 +136,10 @@ export default function EditUserPage() {
             });
 
             if (!metadataResponse.ok) {
-                throw new Error("Failed to update user metadata");
+                throw new Error("Failed to update user metadata in Clerk");
             }
 
+            // Update Clerk user info
             const userUpdateResponse = await fetch(`/api/users/${userId}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
@@ -130,7 +153,30 @@ export default function EditUserPage() {
             });
 
             if (!userUpdateResponse.ok) {
-                throw new Error("Failed to update user information");
+                throw new Error("Failed to update user information in Clerk");
+            }
+
+            // Update database
+            const dbUpdateResponse = await fetch(
+                `${process.env.NEXT_PUBLIC_API}/users/${userId}`,
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        userId,
+                        name: `${formData.firstName} ${formData.lastName}`.trim(),
+                        role: formData.role.toUpperCase(),
+                        voucherBal:
+                            formData.role === "resident"
+                                ? parseFloat(formData.voucherBalance)
+                                : 0,
+                        status: formData.suspended ? "SUSPENDED" : "ACTIVE",
+                    }),
+                }
+            );
+
+            if (!dbUpdateResponse.ok) {
+                throw new Error("Failed to update user in database");
             }
 
             toast({
@@ -141,9 +187,13 @@ export default function EditUserPage() {
             router.push("/admin/dashboard/users");
             router.refresh();
         } catch (error) {
+            console.error("Error updating user:", error);
             toast({
                 title: "Error",
-                description: "Failed to update user",
+                description:
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to update user",
                 variant: "destructive",
             });
         } finally {
@@ -273,7 +323,7 @@ export default function EditUserPage() {
                                 </Select>
                             </div>
 
-                            {formData.role === "Resident" && (
+                            {formData.role === "resident" && (
                                 <div className="space-y-2">
                                     <Label htmlFor="voucherBalance">
                                         Voucher Balance

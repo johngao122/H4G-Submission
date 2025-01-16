@@ -24,8 +24,9 @@ interface CartItem extends Product {
 
 interface ProductTableProps {
     products: Product[];
-    onDeleteProduct: (id: string) => void;
-    onUpdateProduct: (product: Product) => void;
+    onDeleteProduct: (id: string) => Promise<void>;
+    onBulkDelete: (productIds: string[]) => Promise<void>;
+    isDeleting: boolean;
 }
 
 export type { ShopItemProps, Product, CartItem, ProductTableProps };

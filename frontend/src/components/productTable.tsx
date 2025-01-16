@@ -38,12 +38,12 @@ import {
     ArrowUpDown,
     Trash2,
     MoreHorizontal,
+    Loader2,
 } from "lucide-react";
 import { Product, ProductTableProps } from "@/app/types/shop";
 import Link from "next/link";
 import { Checkbox } from "./ui/checkbox";
 import { Card, CardContent } from "./ui/card";
-import { Badge } from "./ui/badge";
 
 interface ProductHeaderProps {
     selectedCount: number;
@@ -62,6 +62,7 @@ interface DeleteProductDialogProps {
     onConfirm: () => void;
     onCancel: () => void;
     productCount: number;
+    isDeleting: boolean;
 }
 
 const DeleteProductDialog: React.FC<DeleteProductDialogProps> = ({
@@ -69,6 +70,7 @@ const DeleteProductDialog: React.FC<DeleteProductDialogProps> = ({
     onConfirm,
     onCancel,
     productCount,
+    isDeleting,
 }) => {
     return (
         <AlertDialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
@@ -86,14 +88,22 @@ const DeleteProductDialog: React.FC<DeleteProductDialogProps> = ({
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel onClick={onCancel}>
+                    <AlertDialogCancel onClick={onCancel} disabled={isDeleting}>
                         Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
                         onClick={onConfirm}
                         className="bg-red-600 hover:bg-red-700"
+                        disabled={isDeleting}
                     >
-                        Delete
+                        {isDeleting ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Deleting...
+                            </>
+                        ) : (
+                            "Delete"
+                        )}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
@@ -199,7 +209,8 @@ const MobileProductView: React.FC<MobileProductViewProps> = ({
 const ProductTable: React.FC<ProductTableProps> = ({
     products,
     onDeleteProduct,
-    onUpdateProduct,
+    onBulkDelete,
+    isDeleting,
 }) => {
     const router = useRouter();
     const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -225,8 +236,12 @@ const ProductTable: React.FC<ProductTableProps> = ({
         setDeleteDialogState((prev) => ({ ...prev, isOpen: false }));
     };
 
-    const handleDeleteConfirm = () => {
-        deleteDialogState.productIds.forEach(onDeleteProduct);
+    const handleDeleteConfirm = async () => {
+        if (deleteDialogState.productIds.length === 1) {
+            await onDeleteProduct(deleteDialogState.productIds[0]);
+        } else {
+            await onBulkDelete(deleteDialogState.productIds);
+        }
         setRowSelection({});
         handleDeleteDialogClose();
     };
@@ -420,6 +435,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                 onConfirm={handleDeleteConfirm}
                 onCancel={handleDeleteDialogClose}
                 productCount={deleteDialogState.productIds.length}
+                isDeleting={isDeleting}
             />
 
             <ProductHeader

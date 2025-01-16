@@ -50,7 +50,7 @@ export async function POST(req: Request) {
             const clerk = await clerkClient();
             const metadata =
                 role === "admin"
-                    ? { role, suspended: false }
+                    ? { role, suspended: false, voucherBalance: 0 }
                     : { role, VoucherBalance: 0, suspended: false };
 
             await clerk.users.updateUser(id, {
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
                         name:
                             `${first_name || ""} ${last_name || ""}`.trim() ||
                             "User",
-                        role: role,
+                        role: role.toUpperCase(),
                         voucherBal: role === "admin" ? undefined : 0,
                     }),
                 }
