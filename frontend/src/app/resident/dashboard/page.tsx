@@ -7,7 +7,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUser } from "@clerk/nextjs";
 import { Badge } from "@/components/ui/badge";
 
-// Type definitions for API responses
 interface TaskContributor {
     taskId: string;
     userId: string;
@@ -63,6 +62,7 @@ export default function ResidentDashboard() {
                         },
                     }
                 );
+                console.log(userResponse);
                 if (!userResponse.ok)
                     throw new Error("Failed to fetch voucher balance");
                 const userData: UserDetails = await userResponse.json();
@@ -134,12 +134,6 @@ export default function ResidentDashboard() {
                         Welcome back to your dashboard
                     </p>
                 </div>
-
-                {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-                        {error}
-                    </div>
-                )}
 
                 <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-6">
@@ -222,7 +216,8 @@ export default function ResidentDashboard() {
                                                     </p>
                                                     <p className="text-sm text-gray-500 mt-1">
                                                         {new Date(
-                                                            transaction.datetime+"Z"
+                                                            transaction.datetime +
+                                                                "Z"
                                                         ).toLocaleString()}
                                                     </p>
                                                 </div>
