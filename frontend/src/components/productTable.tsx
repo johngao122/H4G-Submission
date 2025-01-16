@@ -50,6 +50,7 @@ interface ProductHeaderProps {
     onAddNew: () => void;
     onOpenDeleteDialog: (productIds: string[]) => void;
     selectedProductIds: string[];
+    isDeleting: boolean;
 }
 
 interface MobileProductViewProps {
@@ -116,6 +117,7 @@ const ProductHeader: React.FC<ProductHeaderProps> = ({
     onAddNew,
     onOpenDeleteDialog,
     selectedProductIds,
+    isDeleting,
 }) => {
     return (
         <div className="flex flex-col space-y-2 sm:flex-row sm:justify-between sm:items-center">
@@ -126,12 +128,26 @@ const ProductHeader: React.FC<ProductHeaderProps> = ({
                         variant="destructive"
                         onClick={() => onOpenDeleteDialog(selectedProductIds)}
                         className="w-full sm:w-auto"
+                        disabled={isDeleting}
                     >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete Selected ({selectedCount})
+                        {isDeleting ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Deleting...
+                            </>
+                        ) : (
+                            <>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete Selected ({selectedCount})
+                            </>
+                        )}
                     </Button>
                 )}
-                <Button onClick={onAddNew} className="w-full sm:w-auto">
+                <Button
+                    onClick={onAddNew}
+                    className="w-full sm:w-auto"
+                    disabled={isDeleting}
+                >
                     <Plus className="mr-2 h-4 w-4" />
                     New Item
                 </Button>
@@ -237,15 +253,20 @@ const ProductTable: React.FC<ProductTableProps> = ({
     };
 
     const handleDeleteConfirm = async () => {
-        if (deleteDialogState.productIds.length === 1) {
-            await onDeleteProduct(deleteDialogState.productIds[0]);
-        } else {
-            await onBulkDelete(deleteDialogState.productIds);
+        try {
+            if (deleteDialogState.productIds.length === 1) {
+                await onDeleteProduct(deleteDialogState.productIds[0]);
+            } else {
+                await onBulkDelete(deleteDialogState.productIds);
+            }
+            setRowSelection({});
+        } catch (error) {
+            console.error("Error deleting products:", error);
+            // Handle error case if needed
+        } finally {
+            handleDeleteDialogClose();
         }
-        setRowSelection({});
-        handleDeleteDialogClose();
     };
-
     const columns: ColumnDef<Product>[] = [
         {
             id: "select",
@@ -443,6 +464,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                 onAddNew={() => router.push("/admin/dashboard/inventory/new")}
                 onOpenDeleteDialog={handleDeleteDialogOpen}
                 selectedProductIds={selectedProductIds}
+                isDeleting={isDeleting}
             />
 
             <div className="hidden md:block rounded-md border">

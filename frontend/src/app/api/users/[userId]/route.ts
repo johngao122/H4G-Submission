@@ -104,3 +104,42 @@ export async function PATCH(
         );
     }
 }
+
+export async function DELETE(
+    req: Request,
+    { params }: { params: { userId: string } }
+) {
+    try {
+        const clerk = await clerkClient();
+        const { userId } = await auth();
+        if (!userId) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        const userIdToDelete = (await params).userId;
+        console.log("Deleting user with ID:", userIdToDelete);
+
+        if (!userIdToDelete) {
+            return NextResponse.json(
+                { error: "User ID is required" },
+                { status: 400 }
+            );
+        }
+
+        await clerk.users.deleteUser(userIdToDelete);
+
+        return NextResponse.json({
+            success: true,
+            message: "User deleted successfully",
+        });
+    } catch (error) {
+        console.error("Error deleting user:", error);
+        return NextResponse.json(
+            { error: "Failed to delete user" },
+            { status: 500 }
+        );
+    }
+}

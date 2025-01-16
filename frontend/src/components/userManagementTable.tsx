@@ -561,31 +561,55 @@ export function UserManagementDataTable() {
         setIsLoading(true);
         try {
             await Promise.all(
-                userIds.map((userId) =>
-                    fetch(`${API_BASE}/users/${userId}`, {
+                userIds.map(async (userId) => {
+                    const dbResponse = await fetch(
+                        `${API_BASE}/users/${userId}`,
+                        {
+                            method: "DELETE",
+                        }
+                    );
+
+                    if (!dbResponse.ok) {
+                        throw new Error(
+                            `Failed to delete user ${userId} from database`
+                        );
+                    }
+
+                    const clerkResponse = await fetch(`/api/users/${userId}`, {
                         method: "DELETE",
-                    })
-                )
+                    });
+
+                    if (!clerkResponse.ok) {
+                        throw new Error(
+                            `Failed to delete user ${userId} from Clerk`
+                        );
+                    }
+                })
             );
 
             toast({
                 title: "Success",
-                description: "Users deleted successfully",
+                description: `Successfully deleted ${userIds.length} user${
+                    userIds.length > 1 ? "s" : ""
+                }`,
             });
 
             await fetchUsers();
             setRowSelection({});
         } catch (error) {
+            console.error("Delete error:", error);
             toast({
                 title: "Error",
-                description: "Failed to delete users",
+                description:
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to delete users",
                 variant: "destructive",
             });
         } finally {
             setIsLoading(false);
         }
     };
-
     const columns: ColumnDef<User>[] = [
         {
             id: "select",

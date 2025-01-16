@@ -135,17 +135,31 @@ export async function PATCH(req: Request) {
 export async function DELETE(req: Request) {
     try {
         const clerk = await clerkClient();
-        const { userId } = await req.json();
-
+        const { userId } = await auth();
         if (!userId) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        const url = new URL(req.url);
+        const userIdToDelete = url.pathname.split("/").pop();
+        console.log("Deleting user with ID:", userIdToDelete);
+
+        if (!userIdToDelete) {
             return NextResponse.json(
                 { error: "User ID is required" },
                 { status: 400 }
             );
         }
 
-        await clerk.users.deleteUser(userId);
-        return NextResponse.json({ success: true });
+        await clerk.users.deleteUser(userIdToDelete);
+
+        return NextResponse.json({
+            success: true,
+            message: "User deleted successfully",
+        });
     } catch (error) {
         console.error("Error deleting user:", error);
         return NextResponse.json(
