@@ -1,62 +1,23 @@
 "use client";
 
 import React from "react";
-import { ReportHeader } from "./reportHeader";
-import { ReportSummary } from "./reportSummary";
-import { AuditTable } from "./auditTable";
-import { RequestTable } from "./requestTable";
-
-// Types for the audit log report
-interface AuditLog {
-    logId: string;
-    userId: string;
-    productId: string;
-    datetime: string;
-    action: string;
-}
-
-interface AuditLogReport {
-    metadata: {
-        startDate: string;
-        endDate: string;
-        generatedAt: string;
-    };
-    logs: AuditLog[];
-    summary: {
-        totalLogs: number;
-        uniqueUsers: number;
-        uniqueProducts: number;
-    };
-}
-
-// Types for the request report
-interface ProductRequest {
-    requestId: string;
-    userId: string;
-    productName: string;
-    productDescription: string;
-    createdOn: string;
-}
-
-interface RequestReport {
-    metadata: {
-        startDate: string;
-        endDate: string;
-        generatedAt: string;
-    };
-    requests: ProductRequest[];
-    summary: {
-        totalRequests: number;
-        uniqueUsers: number;
-    };
-}
-
-interface ReportContentProps {
-    reportType: "audit" | "request";
-    startDate: string;
-    endDate: string;
-    data: AuditLogReport | RequestReport;
-}
+import { format } from "date-fns";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AuditLogReport } from "./auditLogReport";
+import { ProductRequestReport } from "./productRequestReport";
+import { PreorderReport } from "./preOrderReport";
+import { TransactionReport } from "./transactionReport";
+import {
+    ReportContentProps,
+    ReportType,
+    ReportDataType,
+    isAuditLogReport,
+    isProductRequestReport,
+    isPreorderReport,
+    isTaskReport,
+    isTransactionReport,
+} from "@/app/types/reports";
 
 export function ReportContent({
     reportType,
@@ -64,50 +25,76 @@ export function ReportContent({
     endDate,
     data,
 }: ReportContentProps) {
-    const renderContent = () => {
-        if (reportType === "audit") {
-            const auditData = data as AuditLogReport;
+    const formatDate = (date: string) => {
+        return format(new Date(date), "PPP");
+    };
+
+    const renderReport = () => {
+        if (!data) {
             return (
-                <>
-                    <ReportSummary
-                        reportType="audit"
-                        data={{
-                            totalLogs: auditData.summary.totalLogs,
-                            uniqueUsers: auditData.summary.uniqueUsers,
-                            uniqueProducts: auditData.summary.uniqueProducts,
-                        }}
-                    />
-                    <AuditTable logs={auditData.logs} />
-                </>
-            );
-        } else {
-            const requestData = data as RequestReport;
-            return (
-                <>
-                    <ReportSummary
-                        reportType="request"
-                        data={{
-                            totalRequests: requestData.summary.totalRequests,
-                            uniqueUsers: requestData.summary.uniqueUsers,
-                        }}
-                    />
-                    <RequestTable requests={requestData.requests} />
-                </>
+                <Alert>
+                    <AlertDescription>
+                        No data available for the selected time period.
+                    </AlertDescription>
+                </Alert>
             );
         }
+
+        switch (reportType) {
+            case "audit":
+                if (isAuditLogReport(reportType, data)) {
+                    return <AuditLogReport data={data} />;
+                }
+                break;
+            case "request":
+                if (isProductRequestReport(reportType, data)) {
+                    return <ProductRequestReport data={data} />;
+                }
+                break;
+            case "preorder":
+                if (isPreorderReport(reportType, data)) {
+                    return <PreorderReport data={data} />;
+                }
+                break;
+            case "transaction":
+                if (isTransactionReport(reportType, data)) {
+                    return <TransactionReport data={data} />;
+                }
+                break;
+        }
+
+        return (
+            <Alert>
+                <AlertDescription>Invalid report data format.</AlertDescription>
+            </Alert>
+        );
+    };
+
+    const getReportTitle = () => {
+        const titles = {
+            audit: "Audit Log Report",
+            request: "Product Request Report",
+            preorder: "Preorder Report",
+            task: "Task Report",
+            transaction: "Transaction Report",
+        };
+
+        return titles[reportType] || "Report";
     };
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="space-y-6">
-                <ReportHeader
-                    reportType={reportType}
-                    startDate={startDate}
-                    endDate={endDate}
-                    generatedAt={data.metadata.generatedAt}
-                />
-                {renderContent()}
-            </div>
-        </div>
+        <Card>
+            <CardHeader className="pb-3">
+                <CardTitle className="text-xl font-bold">
+                    {getReportTitle()}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                    {startDate && endDate
+                        ? `${formatDate(startDate)} - ${formatDate(endDate)}`
+                        : "Select date range"}
+                </p>
+            </CardHeader>
+            <CardContent>{renderReport()}</CardContent>
+        </Card>
     );
 }

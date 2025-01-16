@@ -26,6 +26,7 @@ const TopBarAdmin = () => {
         { name: "Tasks", href: "/admin/dashboard/tasks" },
         { name: "User Accounts", href: "/admin/dashboard/users" },
         { name: "Inventory", href: "/admin/dashboard/inventory" },
+        { name: "Product Requests", href: "/admin/dashboard/product-requests" },
         { name: "Reports", href: "/admin/dashboard/reports" },
     ];
 

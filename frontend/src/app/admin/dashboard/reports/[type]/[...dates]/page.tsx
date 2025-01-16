@@ -4,70 +4,234 @@ import React from "react";
 import { useParams } from "next/navigation";
 import { ReportContent } from "@/components/reports/reportContent";
 import TopBarAdmin from "@/components/topbarAdmin";
-import { Loader2 } from "lucide-react"; // Import for loading spinner
+import { Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { formatDateForAPI, isValidDateRange } from "./helpers";
 
-// Sample data - replace with API call
-const SAMPLE_DATA = {
-    audit: {
-        metadata: {
-            startDate: "2024-01-01",
-            endDate: "2024-01-15",
-            generatedAt: new Date().toISOString(),
-        },
-        logs: [
-            {
-                logId: "L2",
-                userId: "U2",
-                productId: "P2",
-                datetime: "2025-01-14T16:15:24.743",
-                action: "CREATE:Product [productId=P2, name=Shoelaces, category=Apparel, desc=null, price=10.0, quantity=50, productPhoto=[]]",
-            },
-        ],
-        summary: {
-            totalLogs: 1,
-            uniqueUsers: 1,
-            uniqueProducts: 1,
-        },
-    },
-    request: {
-        metadata: {
-            startDate: "2024-01-01",
-            endDate: "2024-01-15",
-            generatedAt: new Date().toISOString(),
-        },
-        requests: [
-            {
-                requestId: "R3",
-                userId: "U3",
-                productName: "toothpaste",
-                productDescription: "travel-sized Darlie toothpaste",
-                createdOn: "2025-01-15T05:26:37.998624965",
-            },
-        ],
-        summary: {
-            totalRequests: 1,
-            uniqueUsers: 1,
-        },
-    },
-};
+type ReportType = "audit" | "request" | "preorder" | "task" | "transaction";
+
+interface TaskContributor {
+    taskId: string;
+    userId: string;
+    contributorName: string;
+    datetime: string;
+    status: "APPROVED" | "PENDING" | "REJECTED";
+}
+
+interface Task {
+    taskId: string;
+    taskName: string;
+    taskDesc: string;
+    taskReward: number;
+    datetime: string;
+    contributors: TaskContributor[];
+    status: "OPEN" | "CLOSED";
+}
+
+const API_ENDPOINTS = {
+    preorder: "preorders/timeframe",
+    audit: "product-logs/timeframe",
+    request: "product-requests/timeframe",
+    task: "tasks/timeframe",
+    transaction: "transactions/timeframe",
+} as const;
 
 export default function ReportPage() {
     const params = useParams();
-    const reportType = params.type as "audit" | "request";
-    const startDate = params.dates?.[0] as string;
-    const endDate = params.dates?.[1] as string;
+    const reportType = params.type as ReportType;
+    const rawStartDate = params.dates?.[0] as string;
+    const rawEndDate = params.dates?.[1] as string;
+
+    const startDate = React.useMemo(
+        () => formatDateForAPI(rawStartDate),
+        [rawStartDate]
+    );
+    const endDate = React.useMemo(
+        () => formatDateForAPI(rawEndDate),
+        [rawEndDate]
+    );
 
     const [isLoading, setIsLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
+    const [data, setData] = React.useState<any>(null);
 
     React.useEffect(() => {
-        // Simulate API call
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 1000);
+        const fetchReport = async () => {
+            if (!isValidDateRange(startDate, endDate)) {
+                setError(
+                    "Invalid date range: Start date must be before or equal to end date"
+                );
+                setIsLoading(false);
+                return;
+            }
 
-        return () => clearTimeout(timer);
-    }, []);
+            setIsLoading(true);
+            setError(null);
+
+            try {
+                const endpoint = API_ENDPOINTS[reportType];
+                if (!endpoint) {
+                    throw new Error("Invalid report type");
+                }
+
+                const baseUrl = process.env.NEXT_PUBLIC_API;
+                const url = `${baseUrl}/${endpoint}?start=${encodeURIComponent(
+                    startDate
+                )}&end=${encodeURIComponent(endDate)}`;
+
+                console.log("Fetching report from:", url);
+
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        setData(null);
+                        return;
+                    }
+                    throw new Error(
+                        `Error fetching report: ${response.statusText}`
+                    );
+                }
+
+                const reportData = await response.json();
+
+                const transformedData = {
+                    metadata: {
+                        startDate,
+                        endDate,
+                        generatedAt: new Date().toISOString(),
+                    },
+                    data: reportData,
+                    summary: calculateSummary(reportType, reportData),
+                };
+
+                console.log("Fetched report:", transformedData);
+
+                setData(transformedData);
+            } catch (err) {
+                setError(
+                    err instanceof Error
+                        ? err.message
+                        : "An error occurred while fetching the report"
+                );
+                console.error("Error fetching report:", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        if (startDate && endDate && reportType) {
+            fetchReport();
+        }
+    }, [reportType, startDate, endDate]);
+
+    const calculateSummary = (type: ReportType, data: any[]) => {
+        if (!Array.isArray(data))
+            return { totalCount: 0, uniqueUsers: 0, startDate, endDate };
+
+        const commonMetrics = {
+            totalCount: data.length,
+            uniqueUsers: new Set(data.map((item) => item.userId)).size,
+        };
+
+        switch (type) {
+            case "audit":
+                return {
+                    ...commonMetrics,
+                    uniqueProducts: new Set(data.map((log) => log.productId))
+                        .size,
+                    actionTypes: Object.entries(
+                        data.reduce((acc, log) => {
+                            acc[log.action] = (acc[log.action] || 0) + 1;
+                            return acc;
+                        }, {} as Record<string, number>)
+                    ),
+                };
+
+            case "request":
+                return {
+                    ...commonMetrics,
+                    statusBreakdown: Object.entries(
+                        data.reduce((acc, req) => {
+                            acc[req.status] = (acc[req.status] || 0) + 1;
+                            return acc;
+                        }, {} as Record<string, number>)
+                    ),
+                };
+
+            case "preorder":
+                return {
+                    ...commonMetrics,
+                    totalValue: data.reduce(
+                        (sum, po) => sum + po.totalPrice,
+                        0
+                    ),
+                    averageValue:
+                        data.length > 0
+                            ? data.reduce((sum, po) => sum + po.totalPrice, 0) /
+                              data.length
+                            : 0,
+                    statusBreakdown: {
+                        pending: data.filter((po) => po.status === "PENDING")
+                            .length,
+                        fulfilled: data.filter(
+                            (po) => po.status === "FULFILLED"
+                        ).length,
+                    },
+                };
+
+            case "task":
+                const tasks = data as Task[];
+                return {
+                    ...commonMetrics,
+                    totalRewards: tasks.reduce(
+                        (sum, task) => sum + task.taskReward,
+                        0
+                    ),
+                    averageReward:
+                        tasks.length > 0
+                            ? tasks.reduce(
+                                  (sum, task) => sum + task.taskReward,
+                                  0
+                              ) / tasks.length
+                            : 0,
+                    statusBreakdown: {
+                        open: tasks.filter((task) => task.status === "OPEN")
+                            .length,
+                        closed: tasks.filter((task) => task.status === "CLOSED")
+                            .length,
+                    },
+                    uniqueContributors: new Set(
+                        tasks.flatMap((task) =>
+                            task.contributors.map((c) => c.userId)
+                        )
+                    ).size,
+                };
+
+            case "transaction":
+                return {
+                    ...commonMetrics,
+                    totalRevenue: data.reduce(
+                        (sum, tx) => sum + tx.totalPrice,
+                        0
+                    ),
+                    averageValue:
+                        data.length > 0
+                            ? data.reduce((sum, tx) => sum + tx.totalPrice, 0) /
+                              data.length
+                            : 0,
+                    uniqueProducts: new Set(data.map((tx) => tx.productId))
+                        .size,
+                    totalQuantity: data.reduce(
+                        (sum, tx) => sum + tx.qtyPurchased,
+                        0
+                    ),
+                };
+
+            default:
+                return commonMetrics;
+        }
+    };
 
     const renderContent = () => {
         if (isLoading) {
@@ -86,10 +250,9 @@ export default function ReportPage() {
         if (error) {
             return (
                 <div className="flex items-center justify-center min-h-[60vh]">
-                    <div className="text-center text-red-500 space-y-2">
-                        <p className="font-semibold">Error Loading Report</p>
-                        <p className="text-sm">{error}</p>
-                    </div>
+                    <Alert variant="destructive">
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
                 </div>
             );
         }
@@ -99,7 +262,7 @@ export default function ReportPage() {
                 reportType={reportType}
                 startDate={startDate}
                 endDate={endDate}
-                data={SAMPLE_DATA[reportType]}
+                data={data}
             />
         );
     };

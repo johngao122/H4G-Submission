@@ -3,23 +3,58 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
 
+interface UserInfo {
+    userId: string;
+    name: string;
+    voucherBal: number;
+    role: "ADMIN" | "RESIDENT";
+    status: "ACTIVE" | "INACTIVE";
+}
+
 export function useAdminAuth() {
     const { isSignedIn, user, isLoaded } = useUser();
     const [isAuthorized, setIsAuthorized] = useState(false);
     const [isChecking, setIsChecking] = useState(true);
+    const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
     const router = useRouter();
     const { signOut } = useClerk();
 
     useEffect(() => {
-        if (isLoaded && user) {
-            const userRole = user.publicMetadata?.role;
-            if (userRole !== "admin") {
+        const checkUserRole = async () => {
+            if (isLoaded && user) {
+                try {
+                    const response = await fetch(
+                        `${process.env.NEXT_PUBLIC_API}/users/${user.id}`
+                    );
+
+                    if (!response.ok) {
+                        throw new Error("Failed to fetch user info");
+                    }
+
+                    const userData: UserInfo = await response.json();
+                    setUserInfo(userData);
+
+                    if (
+                        userData.role === "ADMIN" &&
+                        userData.status === "ACTIVE"
+                    ) {
+                        setIsAuthorized(true);
+                    } else {
+                        setIsAuthorized(false);
+                    }
+                } catch (error) {
+                    console.error("Error fetching user role:", error);
+                    setIsAuthorized(false);
+                } finally {
+                    setIsChecking(false);
+                }
+            } else if (isLoaded && !user) {
+                setIsChecking(false);
                 setIsAuthorized(false);
-            } else {
-                setIsAuthorized(true);
             }
-            setIsChecking(false);
-        }
+        };
+
+        checkUserRole();
     }, [isLoaded, user]);
 
     const handleSwitchAccount = async () => {
@@ -47,9 +82,9 @@ export function useAdminAuth() {
                         </h2>
 
                         <p className="text-gray-600 text-center mb-8">
-                            You do not have permission to access the admin
-                            portal. This area is restricted to administrators
-                            only.
+                            {userInfo?.status === "INACTIVE"
+                                ? "Your account is currently inactive. Please contact an administrator."
+                                : "You do not have permission to access the admin portal. This area is restricted to administrators only."}
                         </p>
 
                         <div className="space-y-3">
@@ -80,5 +115,6 @@ export function useAdminAuth() {
         isChecking,
         AccessDenied,
         user,
+        userInfo,
     };
 }

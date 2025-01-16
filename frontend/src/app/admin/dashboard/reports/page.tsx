@@ -32,9 +32,34 @@ import {
 import { Label } from "@/components/ui/label";
 import TopBarAdmin from "@/components/topbarAdmin";
 
+type ReportType = "audit" | "request" | "preorder" | "transaction";
+
+const REPORT_TYPES = [
+    {
+        value: "audit",
+        label: "Audit Log Report",
+        description: "View all product-related actions and changes",
+    },
+    {
+        value: "request",
+        label: "Product Request Report",
+        description: "View all product requests from residents",
+    },
+    {
+        value: "preorder",
+        label: "Preorder Report",
+        description: "View all product preorders and their status",
+    },
+    {
+        value: "transaction",
+        label: "Transaction Report",
+        description: "View all product transactions and revenue",
+    },
+] as const;
+
 export default function ReportsPage() {
     const router = useRouter();
-    const [reportType, setReportType] = React.useState<string>("");
+    const [reportType, setReportType] = React.useState<ReportType | "">("");
     const [dateState, setDateState] = React.useState<Range[]>([
         {
             startDate: new Date(),
@@ -72,28 +97,36 @@ export default function ReportsPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        {/* Report Type Selection */}
                         <div className="space-y-2">
                             <Label htmlFor="report-type">Report Type</Label>
                             <Select
                                 value={reportType}
-                                onValueChange={setReportType}
+                                onValueChange={(value) =>
+                                    setReportType(value as ReportType)
+                                }
                             >
                                 <SelectTrigger id="report-type">
                                     <SelectValue placeholder="Select a report type" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="audit">
-                                        Audit Log Report
-                                    </SelectItem>
-                                    <SelectItem value="request">
-                                        Product Request Report
-                                    </SelectItem>
+                                    {REPORT_TYPES.map((type) => (
+                                        <SelectItem
+                                            key={type.value}
+                                            value={type.value}
+                                            className="space-y-1.5"
+                                        >
+                                            <div className="font-medium">
+                                                {type.label}
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                {type.description}
+                                            </p>
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        {/* Date Range Picker */}
                         <div className="space-y-2">
                             <Label>Date Range</Label>
                             <Popover>
@@ -148,7 +181,6 @@ export default function ReportsPage() {
                             </Popover>
                         </div>
 
-                        {/* Generate Button */}
                         <Button
                             className="w-full"
                             onClick={handleGenerateReport}

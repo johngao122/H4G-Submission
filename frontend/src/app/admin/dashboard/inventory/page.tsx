@@ -6,6 +6,7 @@ import ProductTable from "@/components/productTable";
 import { Product } from "@/app/types/shop";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@clerk/nextjs";
 
 interface APIProduct {
     productId: string;
@@ -17,7 +18,6 @@ interface APIProduct {
     productPhoto: string;
 }
 
-// Mapping function to convert API product to our Product type
 const mapAPIProductToProduct = (apiProduct: APIProduct): Product => ({
     id: apiProduct.productId,
     name: apiProduct.name,
@@ -33,6 +33,7 @@ export default function InventoryPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isDeletingProducts, setIsDeletingProducts] = useState(false);
     const { toast } = useToast();
+    const { userId } = useAuth();
     const baseUrl = process.env.NEXT_PUBLIC_API;
 
     const fetchProducts = async () => {
@@ -60,7 +61,39 @@ export default function InventoryPage() {
         fetchProducts();
     }, []);
 
+    const deleteProductImage = async (imageUrl: string) => {
+        if (!imageUrl || imageUrl === "/api/placeholder/300/200") return;
+
+        try {
+            const url = new URL(
+                "/api/delete-product-image",
+                window.location.origin
+            );
+            url.searchParams.set("url", imageUrl);
+
+            const response = await fetch(url, {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to delete image from blob storage");
+            }
+        } catch (error) {
+            console.error("Error deleting image from blob storage:", error);
+            throw error;
+        }
+    };
+
     const handleBulkDeleteProducts = async (productIds: string[]) => {
+        if (!userId) {
+            toast({
+                title: "Error",
+                description: "You must be logged in to delete products.",
+                variant: "destructive",
+            });
+            return;
+        }
+
         setIsDeletingProducts(true);
         const failedDeletions: string[] = [];
 
@@ -68,10 +101,22 @@ export default function InventoryPage() {
             await Promise.all(
                 productIds.map(async (productId) => {
                     try {
+                        const product = products.find(
+                            (p) => p.id === productId
+                        );
+                        if (!product) return;
+
+                        if (product.imageUrl) {
+                            await deleteProductImage(product.imageUrl);
+                        }
+
                         const response = await fetch(
                             `${baseUrl}/products/${productId}`,
                             {
                                 method: "DELETE",
+                                headers: {
+                                    userId: userId,
+                                },
                             }
                         );
 
@@ -90,7 +135,6 @@ export default function InventoryPage() {
                 })
             );
 
-            // Remove successfully deleted products from state
             setProducts((prevProducts) =>
                 prevProducts.filter(
                     (product) =>
@@ -99,7 +143,6 @@ export default function InventoryPage() {
                 )
             );
 
-            // Show appropriate toast message
             if (failedDeletions.length === 0) {
                 toast({
                     title: "Success",
