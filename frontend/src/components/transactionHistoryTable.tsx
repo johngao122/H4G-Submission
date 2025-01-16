@@ -108,7 +108,7 @@ const TransactionHistoryTable: React.FC = () => {
     }, [userId, toast]);
 
     const formatDateTime = (datetime: string) => {
-        return new Date(datetime).toLocaleString("en-US", {
+        return new Date(datetime+"Z").toLocaleString("en-US", {
             dateStyle: "medium",
             timeStyle: "short",
         });

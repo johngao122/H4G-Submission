@@ -222,7 +222,7 @@ export default function ResidentDashboard() {
                                                     </p>
                                                     <p className="text-sm text-gray-500 mt-1">
                                                         {new Date(
-                                                            transaction.datetime
+                                                            transaction.datetime+"Z"
                                                         ).toLocaleString()}
                                                     </p>
                                                 </div>
