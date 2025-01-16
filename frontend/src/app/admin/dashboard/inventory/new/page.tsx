@@ -67,7 +67,7 @@ export default function ProductCreatePage() {
             ...prev,
             [name]:
                 name === "price" || name === "quantity"
-                    ? parseFloat(value) || 0
+                    ? Math.max(0, parseFloat(value) || 0)
                     : value,
         }));
     };
@@ -236,8 +236,12 @@ export default function ProductCreatePage() {
                                         id="price"
                                         name="price"
                                         type="number"
-                                        step="0.01"
-                                        value={formData.price}
+                                        step="0.5"
+                                        value={
+                                            formData.price === 0
+                                                ? ""
+                                                : formData.price
+                                        }
                                         onChange={handleInputChange}
                                         required
                                     />
@@ -248,7 +252,11 @@ export default function ProductCreatePage() {
                                         id="quantity"
                                         name="quantity"
                                         type="number"
-                                        value={formData.quantity}
+                                        value={
+                                            formData.quantity === 0
+                                                ? ""
+                                                : formData.quantity
+                                        }
                                         onChange={handleInputChange}
                                         required
                                     />

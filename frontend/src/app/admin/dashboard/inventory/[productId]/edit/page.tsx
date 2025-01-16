@@ -232,7 +232,7 @@ export default function ProductEditPage({ params }: ProductEditPageProps) {
                 ...prev,
                 [name]:
                     name === "price" || name === "quantity"
-                        ? parseFloat(value) || 0
+                        ? Math.max(0, parseFloat(value) || 0)
                         : value,
             };
         });
@@ -284,7 +284,6 @@ export default function ProductEditPage({ params }: ProductEditPageProps) {
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* Rest of the form JSX remains the same */}
                             <div className="space-y-4">
                                 <Label>Product Image</Label>
                                 <div className="flex items-start space-x-4">
@@ -365,7 +364,7 @@ export default function ProductEditPage({ params }: ProductEditPageProps) {
                                         id="price"
                                         name="price"
                                         type="number"
-                                        step="0.01"
+                                        step="0.5"
                                         value={formData.price}
                                         onChange={handleInputChange}
                                         required

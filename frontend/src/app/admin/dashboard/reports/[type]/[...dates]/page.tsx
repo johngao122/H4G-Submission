@@ -43,11 +43,11 @@ export default function ReportPage() {
     const rawEndDate = params.dates?.[1] as string;
 
     const startDate = React.useMemo(
-        () => formatDateForAPI(rawStartDate),
+        () => formatDateForAPI(rawStartDate, false),
         [rawStartDate]
     );
     const endDate = React.useMemo(
-        () => formatDateForAPI(rawEndDate),
+        () => formatDateForAPI(rawEndDate, true),
         [rawEndDate]
     );
 

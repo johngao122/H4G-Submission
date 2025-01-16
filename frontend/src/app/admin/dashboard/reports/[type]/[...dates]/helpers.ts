@@ -1,4 +1,8 @@
-export const formatDateForAPI = (date: string): string => {
+export const formatDateForAPI = (date: string, end: boolean): string => {
+    if (end) {
+        const formattedDate = `${date}T23:59:59.999`;
+        return formattedDate;
+    }
     const formattedDate = `${date}T00:00:00.000`;
     return formattedDate;
 };
