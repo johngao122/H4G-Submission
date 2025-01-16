@@ -182,12 +182,12 @@ This tab allows residents to fill in a form to request for items that are not al
 * Admin will also be able to filter resident entries based on specific tasks in the search bar.
 <br>
 
-> **Select**
+**Select**
 <br> 
     - A check box admin is able to click and select one or multiple entries
     <br>
 
-> **Status** 
+**Status** 
 <br>
     - *In Progress*: Resident has accepted task but has not marked it as completed yet
     <br>
@@ -289,7 +289,20 @@ Users who are suspended will see the following:
 
 <br>
 
-### 5. Reports
+### 5. Preorders
+* Allow admins to fulfill preorders made by residents
+
+![Screenshot 2025-01-17 at 1 24 43 AM](https://github.com/user-attachments/assets/d087bcaf-6730-452d-89d4-b9ff4e82a4fc)
+
+**Actions**
+
+-*Fulfill Order*: Allows admins to fulfill individual orders, it only allows admins to fulfill orders only if the user has enough balance and there is enough stock in inventory
+
+![Screenshot 2025-01-17 at 1 24 52 AM](https://github.com/user-attachments/assets/c806263b-c269-4c25-9561-40acc5f0fea6)
+
+<br>
+
+### 6. Reports
 * Allows admin to generate reports of the weekly stock movement of all products in the inventory.
     * Aids the admin in doing stock analysis, including spotting products that meet higher demand, predicting products that are be low in stock soon etc.
 
@@ -313,6 +326,8 @@ Here is an example report generated:
 ### 1. Quick Actions
 * Add Task: Allows admin to add new tasks to the MWH system. This saves admin the trouble of navigating the MWH webpage from *Tasks > Add Task*
 * Add Item: Allows admin to add new items to the MWH inventory. This saves admin the trouble of navigating the MWH webpage from *Inventory > Add Item*
+* Add Task: Allows admin to add new tasks to the MWH task system. This saves the admin time of navigating through the task page
+* Generate a report: Allows admin to generate a report.
 
 ### 2. Inventory Alerts
 * A scrollable list that displays all items in MWH inventory that are low in stock or out of stock.
@@ -321,3 +336,12 @@ Here is an example report generated:
 ### 3. Recent Activities
 * A list of the most recent activities throughout the MWH portal, by both residents and admins.
     * Allows MWH admin to remotely monitor recent or current website activities.
+
+<br><br>
+
+---
+
+# Known Problems:
+
+* *Sign in portal says development still in progress*
+	- We are using clerk for authentication, however we need to pay to remove the development sign in component, so therefore we are stuck with this as we have no budget
