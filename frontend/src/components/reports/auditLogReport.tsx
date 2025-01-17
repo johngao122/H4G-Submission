@@ -21,6 +21,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { AuditLogReportProps, AuditLog } from "@/app/types/reports";
+import { cn } from "@/lib/utils";
+
+interface ActionDetails {
+    type: string;
+    details: string | Record<string, string>;
+    raw?: string;
+}
 
 export function AuditLogReport({ data }: AuditLogReportProps) {
     const [filterAction, setFilterAction] = React.useState<string>("all");
@@ -29,7 +36,17 @@ export function AuditLogReport({ data }: AuditLogReportProps) {
         key: keyof AuditLog;
         direction: "asc" | "desc";
     }>({ key: "datetime", direction: "desc" });
-    console.log("Data in audit log: ", data);
+    const [isMobile, setIsMobile] = React.useState(false);
+
+    React.useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
 
     const summary = React.useMemo(() => {
         const uniqueUsers = new Set(data.data.map((log) => log.userId)).size;
@@ -52,7 +69,7 @@ export function AuditLogReport({ data }: AuditLogReportProps) {
     const formatDate = (dateString: string) =>
         format(new Date(dateString), "MMM d, yyyy HH:mm:ss");
 
-    const parseAction = (action: string) => {
+    const parseAction = (action: string): ActionDetails => {
         if (action === "DELETE")
             return { type: "DELETE", details: "Item deleted" };
 
@@ -153,6 +170,61 @@ export function AuditLogReport({ data }: AuditLogReportProps) {
         );
     };
 
+    const MobileAuditCard = ({ log }: { log: AuditLog }) => {
+        const { type, details } = parseAction(log.action);
+        return (
+            <Card className="mb-4">
+                <CardContent className="pt-4">
+                    <div className="space-y-3">
+                        <div className="flex justify-between items-start">
+                            <span
+                                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getActionBadgeColor(
+                                    type
+                                )}`}
+                            >
+                                {type}
+                            </span>
+                            <span className="text-sm text-gray-500">
+                                {formatDate(log.datetime)}
+                            </span>
+                        </div>
+
+                        <div className="space-y-2">
+                            <div>
+                                <span className="text-sm font-medium">
+                                    User ID:{" "}
+                                </span>
+                                <span className="text-sm font-mono">
+                                    {log.userId.split("_")[1]}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-sm font-medium">
+                                    Product ID:{" "}
+                                </span>
+                                <span className="text-sm font-mono">
+                                    {log.productId}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="pt-2 border-t">
+                            <div className="text-sm">
+                                {typeof details === "object" ? (
+                                    renderProductDetails(details)
+                                ) : (
+                                    <span className="text-gray-600">
+                                        {details}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    };
+
     if (!data || data.data.length === 0) {
         return (
             <div className="text-center py-8">
@@ -163,40 +235,40 @@ export function AuditLogReport({ data }: AuditLogReportProps) {
 
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="text-2xl font-bold">
+                        <div className="text-xl md:text-2xl font-bold">
                             {summary.totalLogs}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                             Total Actions
                         </p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="text-2xl font-bold">
+                        <div className="text-xl md:text-2xl font-bold">
                             {summary.uniqueUsers}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                             Unique Users
                         </p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="text-2xl font-bold">
+                        <div className="text-xl md:text-2xl font-bold">
                             {summary.uniqueProducts}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                             Unique Products
                         </p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                             {Object.entries(summary.actionCounts).map(
                                 ([type, count]) => (
                                     <span
@@ -210,7 +282,7 @@ export function AuditLogReport({ data }: AuditLogReportProps) {
                                 )
                             )}
                         </div>
-                        <p className="text-sm text-muted-foreground mt-2">
+                        <p className="text-xs md:text-sm text-muted-foreground mt-2">
                             Action Breakdown
                         </p>
                     </CardContent>
@@ -221,14 +293,14 @@ export function AuditLogReport({ data }: AuditLogReportProps) {
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
-                        placeholder="Search by user, product, or action..."
+                        placeholder="Search logs..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-9"
                     />
                 </div>
                 <Select value={filterAction} onValueChange={setFilterAction}>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-full md:w-[180px]">
                         <SelectValue placeholder="Filter by action" />
                     </SelectTrigger>
                     <SelectContent>
@@ -240,57 +312,75 @@ export function AuditLogReport({ data }: AuditLogReportProps) {
                 </Select>
             </div>
 
-            <div className="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-[180px]">
-                                Date & Time
-                            </TableHead>
-                            <TableHead>User ID</TableHead>
-                            <TableHead>Action</TableHead>
-                            <TableHead>Product ID</TableHead>
-                            <TableHead className="w-[400px]">Details</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {filteredAndSortedLogs.map((log) => {
-                            const { type, details } = parseAction(log.action);
-                            return (
-                                <TableRow key={log.logId}>
-                                    <TableCell className="whitespace-nowrap">
-                                        {formatDate(log.datetime)}
-                                    </TableCell>
-                                    <TableCell className="font-mono text-sm">
-                                        {log.userId.split("_")[1]}
-                                    </TableCell>
-                                    <TableCell>
-                                        <span
-                                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getActionBadgeColor(
-                                                type
-                                            )}`}
-                                        >
-                                            {type}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell className="font-mono text-sm">
-                                        {log.productId}
-                                    </TableCell>
-                                    <TableCell>
-                                        {typeof details === "object" ? (
-                                            renderProductDetails(details)
-                                        ) : (
-                                            <span className="text-gray-600">
-                                                {details}
+            {isMobile ? (
+                <div className="space-y-4">
+                    {filteredAndSortedLogs.map((log) => (
+                        <MobileAuditCard key={log.logId} log={log} />
+                    ))}
+                </div>
+            ) : (
+                <div className="rounded-md border overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="min-w-[180px]">
+                                    Date & Time
+                                </TableHead>
+                                <TableHead>User ID</TableHead>
+                                <TableHead>Action</TableHead>
+                                <TableHead>Product ID</TableHead>
+                                <TableHead className="min-w-[400px]">
+                                    Details
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredAndSortedLogs.map((log) => {
+                                const { type, details } = parseAction(
+                                    log.action
+                                );
+                                return (
+                                    <TableRow key={log.logId}>
+                                        <TableCell className="whitespace-nowrap">
+                                            {formatDate(log.datetime)}
+                                        </TableCell>
+                                        <TableCell className="font-mono text-sm">
+                                            {log.userId.split("_")[1]}
+                                        </TableCell>
+                                        <TableCell>
+                                            <span
+                                                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getActionBadgeColor(
+                                                    type
+                                                )}`}
+                                            >
+                                                {type}
                                             </span>
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            );
-                        })}
-                    </TableBody>
-                </Table>
-            </div>
+                                        </TableCell>
+                                        <TableCell className="font-mono text-sm">
+                                            {log.productId}
+                                        </TableCell>
+                                        <TableCell>
+                                            {typeof details === "object" ? (
+                                                renderProductDetails(details)
+                                            ) : (
+                                                <span className="text-gray-600">
+                                                    {details}
+                                                </span>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+                </div>
+            )}
+
+            {filteredAndSortedLogs.length === 0 && (
+                <div className="text-center py-8">
+                    <p className="text-gray-500">No matching logs found</p>
+                </div>
+            )}
         </div>
     );
 }

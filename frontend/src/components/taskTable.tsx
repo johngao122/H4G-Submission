@@ -728,7 +728,6 @@ const TaskTableAdmin = () => {
             <DesktopTableView table={table} />
             <MobileCardView table={table} onTaskClick={handleTaskClick} />
 
-            {/* Task Details Dialog */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>

@@ -62,7 +62,7 @@ export default function ResidentDashboard() {
                         },
                     }
                 );
-                console.log(userResponse);
+
                 if (!userResponse.ok)
                     throw new Error("Failed to fetch voucher balance");
                 const userData: UserDetails = await userResponse.json();

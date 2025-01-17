@@ -50,7 +50,6 @@ const AddUserForm = () => {
             ...prev,
             role: value,
         }));
-        console.log(formData);
     };
 
     const validateForm = (): boolean => {
@@ -113,7 +112,6 @@ const AddUserForm = () => {
         setIsSubmitting(true);
 
         try {
-            console.log(formData);
             const clerkResponse = await fetch("/api/users", {
                 method: "POST",
                 headers: {

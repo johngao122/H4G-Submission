@@ -145,7 +145,6 @@ export async function DELETE(req: Request) {
 
         const url = new URL(req.url);
         const userIdToDelete = url.pathname.split("/").pop();
-        console.log("Deleting user with ID:", userIdToDelete);
 
         if (!userIdToDelete) {
             return NextResponse.json(
@@ -178,10 +177,10 @@ export async function POST(request: Request) {
                 { status: 401 }
             );
         }
-        console.log("Creating clerk user...");
+
         const data = await request.json();
         const { name, phoneNumber, username, password, role } = data;
-        console.log("Clerk role", role);
+
         const client = await clerkClient();
 
         const nameParts = name.split(" ");
@@ -208,8 +207,6 @@ export async function POST(request: Request) {
             skipPasswordChecks: true,
             skipPasswordRequirement: true,
         });
-
-        console.log("Created clerk user:", user);
 
         return NextResponse.json({
             message: "User created",

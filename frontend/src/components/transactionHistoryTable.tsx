@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useToast } from "@/hooks/use-toast";
@@ -40,9 +38,9 @@ import {
     ChevronUp,
     ChevronDown,
     Loader2,
+    Search,
 } from "lucide-react";
 
-// Updated interface to match API response
 interface Transaction {
     transactionId: string;
     userId: string;
@@ -63,11 +61,22 @@ const TransactionHistoryTable: React.FC = () => {
         React.useState<ColumnFiltersState>([]);
     const [selectedTransaction, setSelectedTransaction] =
         React.useState<Transaction | null>(null);
+    const [isMobile, setIsMobile] = React.useState(false);
+
+    // Check for mobile viewport on mount and window resize
+    React.useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
 
     React.useEffect(() => {
         const fetchTransactions = async () => {
             if (!userId) return;
-
             setIsLoading(true);
             setError(null);
 
@@ -108,7 +117,7 @@ const TransactionHistoryTable: React.FC = () => {
     }, [userId, toast]);
 
     const formatDateTime = (datetime: string) => {
-        return new Date(datetime+"Z").toLocaleString("en-US", {
+        return new Date(datetime + "Z").toLocaleString("en-US", {
             dateStyle: "medium",
             timeStyle: "short",
         });
@@ -128,12 +137,6 @@ const TransactionHistoryTable: React.FC = () => {
             accessorKey: "datetime",
             header: "Date & Time",
             cell: ({ row }) => formatDateTime(row.getValue("datetime")),
-            sortingFn: (rowA, rowB) => {
-                return (
-                    new Date(rowA.original.datetime).getTime() -
-                    new Date(rowB.original.datetime).getTime()
-                );
-            },
         },
         {
             accessorKey: "productId",
@@ -189,6 +192,42 @@ const TransactionHistoryTable: React.FC = () => {
         );
     }
 
+    const MobileTransactionCard = ({
+        transaction,
+    }: {
+        transaction: Transaction;
+    }) => (
+        <Card
+            className="mb-4"
+            onClick={() => setSelectedTransaction(transaction)}
+        >
+            <CardContent className="p-4">
+                <div className="space-y-2">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-sm text-gray-500">
+                                Transaction ID
+                            </p>
+                            <p className="font-medium">
+                                {transaction.transactionId}
+                            </p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-sm text-gray-500">Amount</p>
+                            <p className="font-bold">
+                                ${transaction.totalPrice.toFixed(2)}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="pt-2 border-t">
+                        <p className="text-sm text-gray-500">Date & Time</p>
+                        <p>{formatDateTime(transaction.datetime)}</p>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+
     return (
         <div className="container mx-auto px-4 py-8">
             <Card>
@@ -197,109 +236,154 @@ const TransactionHistoryTable: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center py-4">
-                        <Input
-                            placeholder="Filter by Transaction ID..."
-                            value={
-                                (table
-                                    .getColumn("transactionId")
-                                    ?.getFilterValue() as string) ?? ""
-                            }
-                            onChange={(event) =>
-                                table
-                                    .getColumn("transactionId")
-                                    ?.setFilterValue(event.target.value)
-                            }
-                            className="max-w-sm"
-                        />
+                        <div className="relative flex-1 max-w-sm">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                            <Input
+                                placeholder="Search transactions..."
+                                value={
+                                    (table
+                                        .getColumn("transactionId")
+                                        ?.getFilterValue() as string) ?? ""
+                                }
+                                onChange={(event) =>
+                                    table
+                                        .getColumn("transactionId")
+                                        ?.setFilterValue(event.target.value)
+                                }
+                                className="pl-10"
+                            />
+                        </div>
                     </div>
-                    <div className="rounded-md border">
-                        <Table>
-                            <TableHeader>
-                                {table.getHeaderGroups().map((headerGroup) => (
-                                    <TableRow key={headerGroup.id}>
-                                        {headerGroup.headers.map((header) => (
-                                            <TableHead key={header.id}>
-                                                {header.isPlaceholder ? null : (
-                                                    <div
-                                                        {...{
-                                                            className:
-                                                                header.column.getCanSort()
-                                                                    ? "cursor-pointer select-none flex items-center"
-                                                                    : "",
-                                                            onClick:
-                                                                header.column.getToggleSortingHandler(),
-                                                        }}
-                                                    >
-                                                        {flexRender(
-                                                            header.column
-                                                                .columnDef
-                                                                .header,
-                                                            header.getContext()
-                                                        )}
-                                                        {header.column.getIsSorted() && (
-                                                            <span className="ml-1">
-                                                                {header.column.getIsSorted() ===
-                                                                "asc" ? (
-                                                                    <ChevronUp className="h-4 w-4" />
-                                                                ) : (
-                                                                    <ChevronDown className="h-4 w-4" />
+
+                    {!isMobile && (
+                        <div className="rounded-md border overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        {table
+                                            .getHeaderGroups()
+                                            .map((headerGroup) => (
+                                                <TableRow key={headerGroup.id}>
+                                                    {headerGroup.headers.map(
+                                                        (header) => (
+                                                            <TableHead
+                                                                key={header.id}
+                                                            >
+                                                                {header.isPlaceholder ? null : (
+                                                                    <div
+                                                                        className={
+                                                                            header.column.getCanSort()
+                                                                                ? "cursor-pointer select-none flex items-center"
+                                                                                : ""
+                                                                        }
+                                                                    >
+                                                                        {flexRender(
+                                                                            header
+                                                                                .column
+                                                                                .columnDef
+                                                                                .header,
+                                                                            header.getContext()
+                                                                        )}
+                                                                        {header.column.getIsSorted() && (
+                                                                            <span className="ml-1">
+                                                                                {header.column.getIsSorted() ===
+                                                                                "asc" ? (
+                                                                                    <ChevronUp className="h-4 w-4" />
+                                                                                ) : (
+                                                                                    <ChevronDown className="h-4 w-4" />
+                                                                                )}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                 )}
-                                                            </span>
-                                                        )}
+                                                            </TableHead>
+                                                        )
+                                                    )}
+                                                </TableRow>
+                                            ))}
+                                    </TableHeader>
+                                    <TableBody>
+                                        {table.getRowModel().rows?.length ? (
+                                            table
+                                                .getRowModel()
+                                                .rows.map((row) => (
+                                                    <TableRow
+                                                        key={row.id}
+                                                        onClick={() =>
+                                                            setSelectedTransaction(
+                                                                row.original
+                                                            )
+                                                        }
+                                                        className="cursor-pointer hover:bg-gray-50"
+                                                    >
+                                                        {row
+                                                            .getVisibleCells()
+                                                            .map((cell) => (
+                                                                <TableCell
+                                                                    key={
+                                                                        cell.id
+                                                                    }
+                                                                >
+                                                                    {flexRender(
+                                                                        cell
+                                                                            .column
+                                                                            .columnDef
+                                                                            .cell,
+                                                                        cell.getContext()
+                                                                    )}
+                                                                </TableCell>
+                                                            ))}
+                                                    </TableRow>
+                                                ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell
+                                                    colSpan={columns.length}
+                                                    className="h-24 text-center"
+                                                >
+                                                    <div className="flex flex-col items-center justify-center text-gray-500">
+                                                        <p className="text-lg font-medium">
+                                                            No Transactions
+                                                            Found
+                                                        </p>
+                                                        <p className="text-sm">
+                                                            There are no
+                                                            transactions in your
+                                                            record yet.
+                                                        </p>
                                                     </div>
-                                                )}
-                                            </TableHead>
-                                        ))}
-                                    </TableRow>
-                                ))}
-                            </TableHeader>
-                            <TableBody>
-                                {table.getRowModel().rows?.length ? (
-                                    table.getRowModel().rows.map((row) => (
-                                        <TableRow
-                                            key={row.id}
-                                            onClick={() =>
-                                                setSelectedTransaction(
-                                                    row.original
-                                                )
-                                            }
-                                            className="cursor-pointer hover:bg-gray-50"
-                                        >
-                                            {row
-                                                .getVisibleCells()
-                                                .map((cell) => (
-                                                    <TableCell key={cell.id}>
-                                                        {flexRender(
-                                                            cell.column
-                                                                .columnDef.cell,
-                                                            cell.getContext()
-                                                        )}
-                                                    </TableCell>
-                                                ))}
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={columns.length}
-                                            className="h-24 text-center"
-                                        >
-                                            <div className="flex flex-col items-center justify-center text-gray-500">
-                                                <p className="text-lg font-medium">
-                                                    No Transactions Found
-                                                </p>
-                                                <p className="text-sm">
-                                                    There are no transactions in
-                                                    your record yet.
-                                                </p>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                    <div className="flex items-center justify-between space-x-2 py-4">
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </div>
+                    )}
+
+                    {isMobile && (
+                        <div className="space-y-4">
+                            {table.getRowModel().rows.map((row) => (
+                                <MobileTransactionCard
+                                    key={row.id}
+                                    transaction={row.original}
+                                />
+                            ))}
+                            {table.getRowModel().rows.length === 0 && (
+                                <div className="text-center py-8 text-gray-500">
+                                    <p className="text-lg font-medium">
+                                        No Transactions Found
+                                    </p>
+                                    <p className="text-sm">
+                                        There are no transactions in your record
+                                        yet.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 py-4">
                         <div className="text-sm text-muted-foreground">
                             Page {table.getState().pagination.pageIndex + 1} of{" "}
                             {table.getPageCount()}
@@ -352,13 +436,12 @@ const TransactionHistoryTable: React.FC = () => {
                 </CardContent>
             </Card>
 
-            {/* Optional: Simple Dialog for Transaction Details */}
             <Dialog
                 open={selectedTransaction !== null}
                 onOpenChange={(open) => !open && setSelectedTransaction(null)}
             >
                 {selectedTransaction && (
-                    <DialogContent className="max-w-md">
+                    <DialogContent className="max-w-md mx-4">
                         <DialogHeader>
                             <DialogTitle>Transaction Details</DialogTitle>
                             <DialogDescription>

@@ -29,6 +29,17 @@ export function TransactionReport({ data }: TransactionReportProps) {
         key: keyof Transaction;
         direction: "asc" | "desc";
     }>({ key: "datetime", direction: "desc" });
+    const [isMobile, setIsMobile] = React.useState(false);
+
+    React.useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
 
     const formatDate = (dateString: string) =>
         format(new Date(dateString), "MMM d, yyyy HH:mm:ss");
@@ -129,50 +140,106 @@ export function TransactionReport({ data }: TransactionReportProps) {
                     : "asc",
         }));
     };
+    const MobileTransactionCard = ({
+        transaction,
+    }: {
+        transaction: Transaction;
+    }) => (
+        <Card className="mb-4">
+            <CardContent className="pt-4">
+                <div className="space-y-3">
+                    <div className="flex justify-between items-start">
+                        <span className="text-sm text-gray-500">
+                            {formatDate(transaction.datetime)}
+                        </span>
+                        <span className="font-medium text-lg">
+                            {formatCurrency(transaction.totalPrice)}
+                        </span>
+                    </div>
+
+                    <div className="space-y-2">
+                        <div>
+                            <span className="text-sm font-medium">
+                                Transaction ID:{" "}
+                            </span>
+                            <span className="text-sm font-mono break-all">
+                                {transaction.transactionId}
+                            </span>
+                        </div>
+                        <div>
+                            <span className="text-sm font-medium">
+                                User ID:{" "}
+                            </span>
+                            <span className="text-sm font-mono break-all">
+                                {transaction.userId}
+                            </span>
+                        </div>
+                        <div>
+                            <span className="text-sm font-medium">
+                                Product ID:{" "}
+                            </span>
+                            <span className="text-sm font-mono break-all">
+                                {transaction.productId}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="pt-2 border-t">
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium">
+                                Quantity:{" "}
+                            </span>
+                            <span className="text-sm">
+                                {transaction.qtyPurchased}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
 
     return (
         <div className="space-y-6">
-            {/* Primary Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="text-2xl font-bold">
+                        <div className="text-xl md:text-2xl font-bold">
                             {formatCurrency(data.summary.totalRevenue)}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                             Total Revenue
                         </p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="text-2xl font-bold">
+                        <div className="text-xl md:text-2xl font-bold">
                             {data.summary.totalCount}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                             Total Transactions
                         </p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="text-2xl font-bold">
+                        <div className="text-xl md:text-2xl font-bold">
                             {formatCurrency(data.summary.averageValue)}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                             Average Transaction Value
                         </p>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Secondary Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <Card>
                     <CardContent className="pt-6">
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                                <span className="text-sm text-muted-foreground">
+                                <span className="text-xs md:text-sm text-muted-foreground">
                                     Last 24 Hours
                                 </span>
                                 <div className="flex items-center space-x-2">
@@ -183,7 +250,7 @@ export function TransactionReport({ data }: TransactionReportProps) {
                                     </span>
                                 </div>
                             </div>
-                            <div className="flex justify-between items-center text-sm text-muted-foreground">
+                            <div className="flex justify-between items-center text-xs md:text-sm text-muted-foreground">
                                 <span>
                                     {timeBasedMetrics.last24Hours.count}{" "}
                                     transactions
@@ -202,7 +269,7 @@ export function TransactionReport({ data }: TransactionReportProps) {
                     <CardContent className="pt-6">
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                                <span className="text-sm text-muted-foreground">
+                                <span className="text-xs md:text-sm text-muted-foreground">
                                     Last 7 Days
                                 </span>
                                 <div className="flex items-center space-x-2">
@@ -213,7 +280,7 @@ export function TransactionReport({ data }: TransactionReportProps) {
                                     </span>
                                 </div>
                             </div>
-                            <div className="flex justify-between items-center text-sm text-muted-foreground">
+                            <div className="flex justify-between items-center text-xs md:text-sm text-muted-foreground">
                                 <span>
                                     {timeBasedMetrics.last7Days.count}{" "}
                                     transactions
@@ -232,7 +299,7 @@ export function TransactionReport({ data }: TransactionReportProps) {
                     <CardContent className="pt-6">
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                                <span className="text-sm text-muted-foreground">
+                                <span className="text-xs md:text-sm text-muted-foreground">
                                     Last 30 Days
                                 </span>
                                 <div className="flex items-center space-x-2">
@@ -243,7 +310,7 @@ export function TransactionReport({ data }: TransactionReportProps) {
                                     </span>
                                 </div>
                             </div>
-                            <div className="flex justify-between items-center text-sm text-muted-foreground">
+                            <div className="flex justify-between items-center text-xs md:text-sm text-muted-foreground">
                                 <span>
                                     {timeBasedMetrics.last30Days.count}{" "}
                                     transactions
@@ -260,19 +327,22 @@ export function TransactionReport({ data }: TransactionReportProps) {
                 </Card>
             </div>
 
-            {/* Filters */}
             <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
-                        placeholder="Search by transaction ID, user, or product..."
+                        placeholder={
+                            isMobile
+                                ? "Search transactions..."
+                                : "Search by transaction ID, user, or product..."
+                        }
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-9"
                     />
                 </div>
                 <Select value={timeFilter} onValueChange={setTimeFilter}>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-full md:w-[180px]">
                         <SelectValue placeholder="Time period" />
                     </SelectTrigger>
                     <SelectContent>
@@ -284,78 +354,99 @@ export function TransactionReport({ data }: TransactionReportProps) {
                 </Select>
             </div>
 
-            {/* Transactions Table */}
-            <div className="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead
-                                className="cursor-pointer"
-                                onClick={() => handleSort("datetime")}
-                            >
-                                Date & Time{" "}
-                                {sortConfig.key === "datetime" &&
-                                    (sortConfig.direction === "asc"
-                                        ? "↑"
-                                        : "↓")}
-                            </TableHead>
-                            <TableHead>Transaction ID</TableHead>
-                            <TableHead>User ID</TableHead>
-                            <TableHead>Product ID</TableHead>
-                            <TableHead
-                                className="text-right cursor-pointer"
-                                onClick={() => handleSort("qtyPurchased")}
-                            >
-                                Quantity{" "}
-                                {sortConfig.key === "qtyPurchased" &&
-                                    (sortConfig.direction === "asc"
-                                        ? "↑"
-                                        : "↓")}
-                            </TableHead>
-                            <TableHead
-                                className="text-right cursor-pointer"
-                                onClick={() => handleSort("totalPrice")}
-                            >
-                                Total Price{" "}
-                                {sortConfig.key === "totalPrice" &&
-                                    (sortConfig.direction === "asc"
-                                        ? "↑"
-                                        : "↓")}
-                            </TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {filteredAndSortedTransactions.map((transaction) => (
-                            <TableRow key={transaction.transactionId}>
-                                <TableCell className="whitespace-nowrap">
-                                    {formatDate(transaction.datetime)}
-                                </TableCell>
-                                <TableCell>
-                                    {transaction.transactionId}
-                                </TableCell>
-                                <TableCell>{transaction.userId}</TableCell>
-                                <TableCell>{transaction.productId}</TableCell>
-                                <TableCell className="text-right">
-                                    {transaction.qtyPurchased}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    {formatCurrency(transaction.totalPrice)}
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                        {filteredAndSortedTransactions.length === 0 && (
+            {isMobile ? (
+                <div className="space-y-4">
+                    {filteredAndSortedTransactions.map((transaction) => (
+                        <MobileTransactionCard
+                            key={transaction.transactionId}
+                            transaction={transaction}
+                        />
+                    ))}
+                    {filteredAndSortedTransactions.length === 0 && (
+                        <div className="text-center py-8">
+                            <p className="text-gray-500">
+                                No transactions found
+                            </p>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="rounded-md border overflow-x-auto">
+                    <Table>
+                        <TableHeader>
                             <TableRow>
-                                <TableCell
-                                    colSpan={6}
-                                    className="text-center py-4"
+                                <TableHead
+                                    className="cursor-pointer whitespace-nowrap"
+                                    onClick={() => handleSort("datetime")}
                                 >
-                                    No transactions found
-                                </TableCell>
+                                    Date & Time{" "}
+                                    {sortConfig.key === "datetime" &&
+                                        (sortConfig.direction === "asc"
+                                            ? "↑"
+                                            : "↓")}
+                                </TableHead>
+                                <TableHead className="whitespace-nowrap">
+                                    Transaction ID
+                                </TableHead>
+                                <TableHead className="whitespace-nowrap">
+                                    User ID
+                                </TableHead>
+                                <TableHead className="whitespace-nowrap">
+                                    Product ID
+                                </TableHead>
+                                <TableHead
+                                    className="text-right cursor-pointer whitespace-nowrap"
+                                    onClick={() => handleSort("qtyPurchased")}
+                                >
+                                    Quantity{" "}
+                                    {sortConfig.key === "qtyPurchased" &&
+                                        (sortConfig.direction === "asc"
+                                            ? "↑"
+                                            : "↓")}
+                                </TableHead>
+                                <TableHead
+                                    className="text-right cursor-pointer whitespace-nowrap"
+                                    onClick={() => handleSort("totalPrice")}
+                                >
+                                    Total Price{" "}
+                                    {sortConfig.key === "totalPrice" &&
+                                        (sortConfig.direction === "asc"
+                                            ? "↑"
+                                            : "↓")}
+                                </TableHead>
                             </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredAndSortedTransactions.map(
+                                (transaction) => (
+                                    <TableRow key={transaction.transactionId}>
+                                        <TableCell className="whitespace-nowrap">
+                                            {formatDate(transaction.datetime)}
+                                        </TableCell>
+                                        <TableCell className="font-mono">
+                                            {transaction.transactionId}
+                                        </TableCell>
+                                        <TableCell className="font-mono">
+                                            {transaction.userId}
+                                        </TableCell>
+                                        <TableCell className="font-mono">
+                                            {transaction.productId}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            {transaction.qtyPurchased}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            {formatCurrency(
+                                                transaction.totalPrice
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                )
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            )}
         </div>
     );
 }

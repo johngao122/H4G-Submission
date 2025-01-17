@@ -120,7 +120,6 @@ export async function DELETE(
         }
 
         const userIdToDelete = (await params).userId;
-        console.log("Deleting user with ID:", userIdToDelete);
 
         if (!userIdToDelete) {
             return NextResponse.json(

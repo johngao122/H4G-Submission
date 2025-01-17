@@ -67,6 +67,17 @@ export default function ReportsPage() {
             key: "selection",
         },
     ]);
+    const [isMobile, setIsMobile] = React.useState(false);
+
+    React.useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
 
     const handleGenerateReport = () => {
         if (!reportType || !dateState[0].startDate || !dateState[0].endDate) {
@@ -161,20 +172,34 @@ export default function ReportsPage() {
                                 </PopoverTrigger>
                                 <PopoverContent
                                     className="w-auto p-0"
-                                    align="start"
+                                    align="center"
                                 >
-                                    <div className="p-3">
+                                    <div
+                                        className={cn(
+                                            "p-3 flex justify-center",
+                                            isMobile && "overflow-x-auto"
+                                        )}
+                                    >
                                         <DateRange
                                             onChange={(item) =>
                                                 setDateState([item.selection])
                                             }
                                             ranges={dateState}
-                                            months={2}
-                                            direction="horizontal"
+                                            months={isMobile ? 1 : 2}
+                                            direction={
+                                                isMobile
+                                                    ? "vertical"
+                                                    : "horizontal"
+                                            }
                                             rangeColors={["#0073C5"]}
                                             maxDate={new Date()}
                                             showDateDisplay={false}
-                                            className="border-none shadow-none"
+                                            className={cn(
+                                                "border-none shadow-none",
+                                                isMobile && "max-w-full"
+                                            )}
+                                            monthDisplayFormat="MMMM yyyy"
+                                            weekdayDisplayFormat="EEEEE"
                                         />
                                     </div>
                                 </PopoverContent>

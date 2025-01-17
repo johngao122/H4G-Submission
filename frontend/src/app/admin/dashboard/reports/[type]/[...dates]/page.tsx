@@ -79,8 +79,6 @@ export default function ReportPage() {
                     startDate
                 )}&end=${encodeURIComponent(endDate)}`;
 
-                console.log("Fetching report from:", url);
-
                 const response = await fetch(url);
 
                 if (!response.ok) {
@@ -104,8 +102,6 @@ export default function ReportPage() {
                     data: reportData,
                     summary: calculateSummary(reportType, reportData),
                 };
-
-                console.log("Fetched report:", transformedData);
 
                 setData(transformedData);
             } catch (err) {

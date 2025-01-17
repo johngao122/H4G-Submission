@@ -5,6 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PackageSearch } from "lucide-react";
 import { format } from "date-fns";
 import TopBarAdmin from "@/components/topbarAdmin";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ProductRequest {
     requestId: string;
@@ -12,21 +18,6 @@ interface ProductRequest {
     productName: string;
     productDescription: string;
     datetime: string;
-}
-
-interface ProductRequestsPageProps {
-    requests: ProductRequest[];
-}
-
-interface ProductRequestCardProps {
-    request: ProductRequest;
-    onActionClick?: (requestId: string) => void;
-}
-
-interface ProductRequestFilters {
-    searchQuery?: string;
-    sortBy?: "date" | "name";
-    sortOrder?: "asc" | "desc";
 }
 
 const ProductRequests = () => {
@@ -57,6 +48,49 @@ const ProductRequests = () => {
         fetchRequests();
     }, []);
 
+    const ProductRequestCard = ({ request }: { request: ProductRequest }) => (
+        <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold truncate">
+                    {request.productName}
+                </CardTitle>
+                <p className="text-sm text-gray-500">
+                    Request ID: {request.requestId}
+                </p>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-2">
+                    <p className="text-sm text-gray-600 line-clamp-2">
+                        {request.productDescription}
+                    </p>
+                    <div className="flex flex-col space-y-2 pt-2 border-t">
+                        <div className="flex items-center text-sm text-gray-500">
+                            <span className="font-medium mr-2">User ID:</span>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger>
+                                        <span className="truncate max-w-[200px]">
+                                            {request.userId}
+                                        </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>{request.userId}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
+                        <div className="text-sm text-gray-500">
+                            {format(
+                                new Date(request.datetime),
+                                "MMM d, yyyy h:mm a"
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+
     const renderContent = () => {
         if (isLoading) {
             return (
@@ -84,35 +118,10 @@ const ProductRequests = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {requests.map((request) => (
-                        <Card
+                        <ProductRequestCard
                             key={request.requestId}
-                            className="hover:shadow-lg transition-shadow"
-                        >
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-lg font-semibold">
-                                    {request.productName}
-                                </CardTitle>
-                                <p className="text-sm text-gray-500">
-                                    Request ID: {request.requestId}
-                                </p>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-2">
-                                    <p className="text-sm text-gray-600">
-                                        {request.productDescription}
-                                    </p>
-                                    <div className="flex justify-between items-center text-sm text-gray-500 pt-2">
-                                        <span>User ID: {request.userId}</span>
-                                        <span>
-                                            {format(
-                                                new Date(request.datetime),
-                                                "MMM d, yyyy h:mm a"
-                                            )}
-                                        </span>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
+                            request={request}
+                        />
                     ))}
 
                     {requests.length === 0 && (

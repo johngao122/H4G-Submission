@@ -29,6 +29,17 @@ export function PreorderReport({ data }: PreorderReportProps) {
         key: keyof Preorder;
         direction: "asc" | "desc";
     }>({ key: "datetime", direction: "desc" });
+    const [isMobile, setIsMobile] = React.useState(false);
+
+    React.useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
 
     const formatDate = (dateString: string) =>
         format(new Date(dateString), "MMM d, yyyy HH:mm:ss");
@@ -65,6 +76,73 @@ export function PreorderReport({ data }: PreorderReportProps) {
             uniqueUsers,
         };
     }, [data.data]);
+
+    const MobilePreorderCard = ({ preorder }: { preorder: Preorder }) => (
+        <Card className="mb-4">
+            <CardContent className="pt-4">
+                <div className="space-y-3">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <span
+                                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadgeColor(
+                                    preorder.status
+                                )}`}
+                            >
+                                {preorder.status}
+                            </span>
+                        </div>
+                        <span className="text-sm text-gray-500">
+                            {formatDate(preorder.datetime)}
+                        </span>
+                    </div>
+
+                    <div className="space-y-2">
+                        <div>
+                            <span className="text-sm font-medium">
+                                Preorder ID:{" "}
+                            </span>
+                            <span className="text-sm font-mono">
+                                {preorder.preorderId}
+                            </span>
+                        </div>
+                        <div>
+                            <span className="text-sm font-medium">
+                                User ID:{" "}
+                            </span>
+                            <span className="text-sm font-mono">
+                                {preorder.userId}
+                            </span>
+                        </div>
+                        <div>
+                            <span className="text-sm font-medium">
+                                Product ID:{" "}
+                            </span>
+                            <span className="text-sm font-mono">
+                                {preorder.productId}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="pt-2 border-t flex justify-between items-center">
+                        <div>
+                            <span className="text-sm font-medium">
+                                Quantity:{" "}
+                            </span>
+                            <span className="text-sm">
+                                {preorder.qtyPreordered}
+                            </span>
+                        </div>
+                        <div>
+                            <span className="text-sm font-medium">Total: </span>
+                            <span className="text-sm">
+                                {formatCurrency(preorder.totalPrice)}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
 
     const filteredAndSortedPreorders = React.useMemo(() => {
         let filtered = [...data.data];
@@ -129,51 +207,49 @@ export function PreorderReport({ data }: PreorderReportProps) {
 
     return (
         <div className="space-y-6">
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="text-2xl font-bold">
+                        <div className="text-xl md:text-2xl font-bold">
                             {data.summary.totalCount}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                             Total Preorders
                         </p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="text-2xl font-bold">
+                        <div className="text-xl md:text-2xl font-bold">
                             {formatCurrency(data.summary.totalValue)}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                             Total Value
                         </p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="text-2xl font-bold">
+                        <div className="text-xl md:text-2xl font-bold">
                             {formatCurrency(data.summary.averageValue)}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                             Average Order Value
                         </p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="text-2xl font-bold">
+                        <div className="text-xl md:text-2xl font-bold">
                             {data.summary.uniqueUsers}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                             Unique Users
                         </p>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Status Summary */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card>
                     <CardContent className="pt-6">
@@ -225,19 +301,18 @@ export function PreorderReport({ data }: PreorderReportProps) {
                 </Card>
             </div>
 
-            {/* Filters */}
             <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
-                        placeholder="Search by user, product, or preorder ID..."
+                        placeholder="Search preorders..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-9"
                     />
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-full md:w-[180px]">
                         <SelectValue placeholder="Filter by status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -248,95 +323,77 @@ export function PreorderReport({ data }: PreorderReportProps) {
                 </Select>
             </div>
 
-            {/* Preorders Table */}
-            <div className="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead
-                                className="cursor-pointer"
-                                onClick={() => handleSort("datetime")}
-                            >
-                                Date & Time{" "}
-                                {sortConfig.key === "datetime" &&
-                                    (sortConfig.direction === "asc"
-                                        ? "↑"
-                                        : "↓")}
-                            </TableHead>
-                            <TableHead
-                                className="cursor-pointer"
-                                onClick={() => handleSort("preorderId")}
-                            >
-                                Preorder ID{" "}
-                                {sortConfig.key === "preorderId" &&
-                                    (sortConfig.direction === "asc"
-                                        ? "↑"
-                                        : "↓")}
-                            </TableHead>
-                            <TableHead>User ID</TableHead>
-                            <TableHead>Product ID</TableHead>
-                            <TableHead
-                                className="cursor-pointer text-right"
-                                onClick={() => handleSort("qtyPreordered")}
-                            >
-                                Quantity{" "}
-                                {sortConfig.key === "qtyPreordered" &&
-                                    (sortConfig.direction === "asc"
-                                        ? "↑"
-                                        : "↓")}
-                            </TableHead>
-                            <TableHead
-                                className="cursor-pointer text-right"
-                                onClick={() => handleSort("totalPrice")}
-                            >
-                                Total Price{" "}
-                                {sortConfig.key === "totalPrice" &&
-                                    (sortConfig.direction === "asc"
-                                        ? "↑"
-                                        : "↓")}
-                            </TableHead>
-                            <TableHead>Status</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {filteredAndSortedPreorders.map((preorder) => (
-                            <TableRow key={preorder.preorderId}>
-                                <TableCell className="whitespace-nowrap">
-                                    {formatDate(preorder.datetime)}
-                                </TableCell>
-                                <TableCell>{preorder.preorderId}</TableCell>
-                                <TableCell>{preorder.userId}</TableCell>
-                                <TableCell>{preorder.productId}</TableCell>
-                                <TableCell className="text-right">
-                                    {preorder.qtyPreordered}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    {formatCurrency(preorder.totalPrice)}
-                                </TableCell>
-                                <TableCell>
-                                    <span
-                                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadgeColor(
-                                            preorder.status
-                                        )}`}
-                                    >
-                                        {preorder.status}
-                                    </span>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                        {filteredAndSortedPreorders.length === 0 && (
+            {isMobile ? (
+                <div className="space-y-4">
+                    {filteredAndSortedPreorders.map((preorder) => (
+                        <MobilePreorderCard
+                            key={preorder.preorderId}
+                            preorder={preorder}
+                        />
+                    ))}
+                    {filteredAndSortedPreorders.length === 0 && (
+                        <div className="text-center py-8">
+                            <p className="text-gray-500">No preorders found</p>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="rounded-md border overflow-x-auto">
+                    <Table>
+                        <TableHeader>
                             <TableRow>
-                                <TableCell
-                                    colSpan={7}
-                                    className="text-center py-4"
+                                <TableHead
+                                    className="cursor-pointer"
+                                    onClick={() => handleSort("datetime")}
                                 >
-                                    No preorders found
-                                </TableCell>
+                                    Date & Time{" "}
+                                    {sortConfig.key === "datetime" &&
+                                        (sortConfig.direction === "asc"
+                                            ? "↑"
+                                            : "↓")}
+                                </TableHead>
+                                <TableHead>Preorder ID</TableHead>
+                                <TableHead>User ID</TableHead>
+                                <TableHead>Product ID</TableHead>
+                                <TableHead className="text-right">
+                                    Quantity
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Total Price
+                                </TableHead>
+                                <TableHead>Status</TableHead>
                             </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredAndSortedPreorders.map((preorder) => (
+                                <TableRow key={preorder.preorderId}>
+                                    <TableCell className="whitespace-nowrap">
+                                        {formatDate(preorder.datetime)}
+                                    </TableCell>
+                                    <TableCell>{preorder.preorderId}</TableCell>
+                                    <TableCell>{preorder.userId}</TableCell>
+                                    <TableCell>{preorder.productId}</TableCell>
+                                    <TableCell className="text-right">
+                                        {preorder.qtyPreordered}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        {formatCurrency(preorder.totalPrice)}
+                                    </TableCell>
+                                    <TableCell>
+                                        <span
+                                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadgeColor(
+                                                preorder.status
+                                            )}`}
+                                        >
+                                            {preorder.status}
+                                        </span>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+            )}
         </div>
     );
 }
