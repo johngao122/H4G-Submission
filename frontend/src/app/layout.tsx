@@ -25,4 +25,8 @@ export default function RootLayout({
 
 export const metadata = {
     title: "Muhammadiyah Welfare Hub",
+    description: "Muhammadiyah Welfare Hub",
+    icons: {
+        icon: "/favicon.png",
+    },
 };
