@@ -50,6 +50,16 @@ interface Transaction {
     datetime: string;
 }
 
+interface ProductDetails {
+    productId: string;
+    name: string;
+    category: string;
+    desc: string;
+    price: number;
+    quantity: number;
+    productPhoto: string;
+}
+
 const TransactionHistoryTable: React.FC = () => {
     const { userId } = useAuth();
     const { toast } = useToast();
@@ -57,13 +67,45 @@ const TransactionHistoryTable: React.FC = () => {
     const [isLoading, setIsLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
     const [sorting, setSorting] = React.useState<SortingState>([]);
+    const [productDetails, setProductDetails] =
+        React.useState<ProductDetails | null>(null);
+    const [isLoadingProduct, setIsLoadingProduct] = React.useState(false);
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
     const [selectedTransaction, setSelectedTransaction] =
         React.useState<Transaction | null>(null);
     const [isMobile, setIsMobile] = React.useState(false);
 
-    // Check for mobile viewport on mount and window resize
+    React.useEffect(() => {
+        const fetchProductDetails = async (productId: string) => {
+            setIsLoadingProduct(true);
+            try {
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_API}/products/${productId}`
+                );
+                if (!response.ok) {
+                    throw new Error("Failed to fetch product details");
+                }
+                const data = await response.json();
+                setProductDetails(data);
+            } catch (err) {
+                toast({
+                    title: "Error",
+                    description: "Failed to load product details",
+                    variant: "destructive",
+                });
+            } finally {
+                setIsLoadingProduct(false);
+            }
+        };
+
+        if (selectedTransaction) {
+            fetchProductDetails(selectedTransaction.productId);
+        } else {
+            setProductDetails(null);
+        }
+    }, [selectedTransaction, toast]);
+
     React.useEffect(() => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth < 768);
@@ -466,29 +508,64 @@ const TransactionHistoryTable: React.FC = () => {
                                 <h4 className="text-sm font-semibold mb-2">
                                     Purchase Details
                                 </h4>
-                                <div className="space-y-2 text-sm">
-                                    <p>
-                                        <span className="font-medium">
-                                            Product ID:
-                                        </span>{" "}
-                                        {selectedTransaction.productId}
+                                {isLoadingProduct ? (
+                                    <div className="flex items-center justify-center py-4">
+                                        <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
+                                    </div>
+                                ) : productDetails ? (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center space-x-4">
+                                            <img
+                                                src={
+                                                    productDetails.productPhoto
+                                                }
+                                                alt={productDetails.name}
+                                                className="w-20 h-20 object-cover rounded"
+                                            />
+                                            <div>
+                                                <h3 className="font-medium">
+                                                    {productDetails.name}
+                                                </h3>
+                                                <p className="text-sm text-gray-500">
+                                                    {productDetails.category}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="text-sm space-y-2">
+                                            <p>{productDetails.desc}</p>
+                                            <p>
+                                                <span className="font-medium">
+                                                    Unit Price:
+                                                </span>{" "}
+                                                $
+                                                {productDetails.price.toFixed(
+                                                    2
+                                                )}
+                                            </p>
+                                            <p>
+                                                <span className="font-medium">
+                                                    Quantity:
+                                                </span>{" "}
+                                                {
+                                                    selectedTransaction.qtyPurchased
+                                                }
+                                            </p>
+                                            <p>
+                                                <span className="font-medium">
+                                                    Total Amount:
+                                                </span>{" "}
+                                                $
+                                                {selectedTransaction.totalPrice.toFixed(
+                                                    2
+                                                )}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-gray-500">
+                                        Failed to load product details
                                     </p>
-                                    <p>
-                                        <span className="font-medium">
-                                            Quantity:
-                                        </span>{" "}
-                                        {selectedTransaction.qtyPurchased}
-                                    </p>
-                                    <p>
-                                        <span className="font-medium">
-                                            Total Amount:
-                                        </span>{" "}
-                                        $
-                                        {selectedTransaction.totalPrice.toFixed(
-                                            2
-                                        )}
-                                    </p>
-                                </div>
+                                )}
                             </div>
                         </div>
                     </DialogContent>
