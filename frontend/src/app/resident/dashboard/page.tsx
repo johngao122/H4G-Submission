@@ -141,12 +141,12 @@ export default function ResidentDashboard() {
 
                         <div>
                             <h2 className="text-xl font-bold mb-4">
-                                Available Tasks
+                                Available Quests
                             </h2>
                             {tasks.length === 0 ? (
                                 <Card className="p-6">
                                     <p className="text-gray-500 text-center">
-                                        No tasks available
+                                        No Quests available
                                     </p>
                                 </Card>
                             ) : (
