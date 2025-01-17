@@ -1,4 +1,4 @@
-# Introduction
+![Screenshot 2025-01-17 at 1 24 52 AM](https://github.com/user-attachments/assets/03f8d68d-4899-449f-88ba-da51eea00dde)# Introduction
 
 Our web-based minimart and voucher system solution for the Muhammadiyah Welfare Home involves a website: "Muhammadiyah Welfare Hub" (referred to in this document as MWH).
 	
@@ -117,18 +117,16 @@ They have the option to add items into their cart to checkout, the shop inventor
 
 
 ### 2. Tasks
-This tab displays all available tasks and their respective credits. 
-* Residents are able to view tasks in detail by clicking on the task itself, they can then choose to do the task by clicking on ***Accept Task***.
+This tab displays all available tasks(disguised as quests) and their respective credits. 
+* Residents are able to view quests in detail by clicking on the task itself, they can then choose to do the quests by clicking on ***Accept Task***.
 
-![Tasks](https://github.com/user-attachments/assets/3d57ef0c-8582-4aea-a93c-73f7d91b804a)
-
-
-![Task Details](https://github.com/user-attachments/assets/186e21b9-c1b9-4bc4-abf3-1a2a77ba62c3)
+![Screenshot 2025-01-17 at 4 20 21 PM](https://github.com/user-attachments/assets/3b7bfa6e-8412-4bef-99ea-732bd361cd11)
 
 
-![Task Joining](https://github.com/user-attachments/assets/0c631b88-7eb6-4a67-a1e9-a9a0dce46e93)
+![Screenshot 2025-01-17 at 4 21 00 PM](https://github.com/user-attachments/assets/88acf250-7755-4a81-aa0a-819000c6a4d1)
 
 
+![Screenshot 2025-01-17 at 4 21 03 PM](https://github.com/user-attachments/assets/a688ecd8-d27d-4075-a93e-a3c65a841903)
 
 
 ### 3. Transaction History
@@ -139,6 +137,13 @@ This tab displays a navigable table past few transactions made by the resident.
 
 
 * Residents are able to view specific transaction breakdowns by clicking on it from the table.
+
+
+### 4. LeaderBoard
+This table allows residents to view the leaderboard of where they stand on their voucher balance. This incentivises residents to help out in more tasks(disguised as quests)
+
+![Screenshot 2025-01-17 at 4 21 12 PM](https://github.com/user-attachments/assets/4baa5cf0-94d5-41bd-b508-ecfe9dd88e30)
+
 
 ### 4. Request Form
 This tab allows residents to fill in a form to request for items that are not already in the store.
