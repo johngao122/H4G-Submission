@@ -1,6 +1,7 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import VoucherBalance from "@/components/voucherBalance";
 
 export async function GET() {
     try {
@@ -179,7 +180,8 @@ export async function POST(request: Request) {
         }
 
         const data = await request.json();
-        const { name, phoneNumber, username, password, role } = data;
+        const { name, phoneNumber, username, password, role, voucherBal } =
+            data;
 
         const client = await clerkClient();
 
@@ -187,13 +189,18 @@ export async function POST(request: Request) {
         const firstName = nameParts[0];
         const lastName = nameParts.slice(1).join(" ") || "";
 
+        const numericVoucherBal = Number(voucherBal) || 0;
+        console.log(numericVoucherBal);
+
         const publicMetadata = {
             role: role,
-            ...(role === "resident" && { voucherBalance: 0 }),
+            voucherBalance: role === "resident" ? numericVoucherBal : 0,
+            suspended: false,
         };
 
         const unsafeMetadata = {
             signUpRoute: role,
+            initialVoucherBalance: numericVoucherBal,
         };
 
         const user = await client.users.createUser({
@@ -214,14 +221,12 @@ export async function POST(request: Request) {
         });
     } catch (error: any) {
         console.error("Error creating user:", error);
-
         if (error.clerkError) {
             return NextResponse.json(
                 { error: error.errors?.[0]?.longMessage || "Clerk API Error" },
                 { status: 422 }
             );
         }
-
         return NextResponse.json(
             { error: "Error creating user" },
             { status: 500 }

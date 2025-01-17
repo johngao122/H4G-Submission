@@ -39,23 +39,27 @@ export async function POST(req: Request) {
     const eventType = evt.type;
 
     if (eventType === "user.created") {
-        const { id, first_name, last_name, unsafe_metadata } = evt.data;
+        const { id, first_name, last_name, unsafe_metadata, public_metadata } =
+            evt.data;
         const signUpRoute =
             unsafe_metadata && typeof unsafe_metadata === "object"
                 ? (unsafe_metadata as { signUpRoute?: string }).signUpRoute
                 : undefined;
         const role = determineUserRole(signUpRoute);
 
-        try {
-            const clerk = await clerkClient();
-            const metadata =
-                role === "admin"
-                    ? { role, suspended: false, voucherBalance: 0 }
-                    : { role, VoucherBalance: 0, suspended: false };
+        const voucherBalance =
+            typeof public_metadata?.voucherBalance === "number"
+                ? public_metadata.voucherBalance
+                : Number(public_metadata?.voucherBalance) || 0;
 
-            await clerk.users.updateUser(id, {
-                publicMetadata: metadata,
+        try {
+            console.log("Sending to API:", {
+                userId: id,
+                name: `${first_name || ""} ${last_name || ""}`.trim() || "User",
+                role: role.toUpperCase(),
+                voucherBal: voucherBalance,
             });
+
             const apiResponse = await fetch(
                 `${process.env.NEXT_PUBLIC_API}/users`,
                 {
@@ -69,18 +73,28 @@ export async function POST(req: Request) {
                             `${first_name || ""} ${last_name || ""}`.trim() ||
                             "User",
                         role: role.toUpperCase(),
-                        voucherBal: role === "admin" ? undefined : 0,
+                        voucherBal: voucherBalance,
                     }),
                 }
             );
 
             if (!apiResponse.ok) {
-                throw new Error("Failed to create user in backend API");
+                const errorData = await apiResponse.json();
+                console.error("API Error:", errorData);
+                throw new Error(
+                    `Failed to create user in backend API: ${JSON.stringify(
+                        errorData
+                    )}`
+                );
             }
+
+            const responseData = await apiResponse.json();
+            console.log("API Response:", responseData);
 
             return NextResponse.json({
                 message: "User created successfully",
                 role,
+                voucherBalance,
             });
         } catch (error) {
             console.error("Error in user creation process:", error);

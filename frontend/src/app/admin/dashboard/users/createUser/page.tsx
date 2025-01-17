@@ -111,13 +111,21 @@ const AddUserForm = () => {
 
         setIsSubmitting(true);
 
+        const submitData = {
+            ...formData,
+            voucherBal:
+                formData.role === "resident" ? Number(formData.voucherBal) : 0,
+        };
+
+        console.log("Submitting data:", submitData);
+
         try {
             const clerkResponse = await fetch("/api/users", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(submitData),
             });
 
             const clerkData = await clerkResponse.json();
@@ -127,6 +135,8 @@ const AddUserForm = () => {
                     clerkData.error || "Failed to create user in Clerk"
                 );
             }
+
+            console.log("Clerk response:", clerkData);
 
             toast({
                 title: "Success",
@@ -166,7 +176,7 @@ const AddUserForm = () => {
     return (
         <div className="container mx-auto px-4 py-8">
             <TopBarAdmin />
-            <main>
+            <main className="mt-8">
                 <Card className="max-w-md mx-auto">
                     <CardHeader>
                         <CardTitle>Add New User</CardTitle>
@@ -289,7 +299,11 @@ const AddUserForm = () => {
                                         type="number"
                                         min="0"
                                         step="0.01"
-                                        value={formData.voucherBal}
+                                        value={
+                                            formData.voucherBal === 0
+                                                ? ""
+                                                : formData.voucherBal
+                                        }
                                         onChange={handleInputChange}
                                         placeholder="Enter initial voucher balance"
                                         className="w-full"

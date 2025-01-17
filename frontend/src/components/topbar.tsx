@@ -24,8 +24,9 @@ import Link from "next/link";
 const TopBar = () => {
     const navigationItems = [
         { name: "Shop", href: "/resident/dashboard/shop" },
-        { name: "Tasks", href: "/resident/dashboard/tasks" },
+        { name: "Quests", href: "/resident/dashboard/tasks" },
         { name: "Transaction History", href: "/resident/dashboard/history" },
+        { name: "Leaderboards", href: "/resident/dashboard/leaderboard" },
         { name: "Request Items", href: "/resident/dashboard/request" },
     ];
 

@@ -98,7 +98,9 @@ const TaskPage = () => {
 
             <main className="container mx-auto px-4 py-8">
                 <div className="mb-8">
-                    <h1 className="text-2xl font-bold mb-6">Available Tasks</h1>
+                    <h1 className="text-2xl font-bold mb-6">
+                        Available Quests
+                    </h1>
 
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="relative flex-1">
@@ -124,13 +126,13 @@ const TaskPage = () => {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="ALL">
-                                        All Tasks
+                                        All Quests
                                     </SelectItem>
                                     <SelectItem value="OPEN">
-                                        Open Tasks
+                                        Open Quests
                                     </SelectItem>
                                     <SelectItem value="CLOSED">
-                                        Closed Tasks
+                                        Closed Quests
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
@@ -151,7 +153,7 @@ const TaskPage = () => {
                     {filteredTasks.length === 0 && (
                         <div className="col-span-full text-center py-8">
                             <p className="text-gray-500">
-                                No tasks found matching your criteria
+                                No quests found matching your criteria
                             </p>
                         </div>
                     )}

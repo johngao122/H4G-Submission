@@ -191,7 +191,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                         <Dialog>
                             <DialogTrigger asChild>
                                 <Button className="w-full mt-4">
-                                    View Task
+                                    View Quest
                                 </Button>
                             </DialogTrigger>
                             <DialogContent>
@@ -250,7 +250,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                                     >
                                         {isUserPartOfTask()
                                             ? "Already Joined"
-                                            : "Join Task"}
+                                            : "Join Quest"}
                                     </Button>
                                 </DialogFooter>
                             </DialogContent>
