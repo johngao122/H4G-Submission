@@ -483,7 +483,7 @@ const TransactionHistoryTable: React.FC = () => {
                 onOpenChange={(open) => !open && setSelectedTransaction(null)}
             >
                 {selectedTransaction && (
-                    <DialogContent className="max-w-md mx-4">
+                    <DialogContent className="max-w-md">
                         <DialogHeader>
                             <DialogTitle>Transaction Details</DialogTitle>
                             <DialogDescription>
